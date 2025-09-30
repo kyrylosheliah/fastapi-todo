@@ -19,6 +19,7 @@ class Task(SQLModel, table=True):
     description: Optional[str] = None
     due_date: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    position: int = 0
 
     status_id: Optional[int] = Field(default=None, foreign_key="status.id")
     category_id: Optional[int] = Field(default=None, foreign_key="category.id")

@@ -20,8 +20,8 @@ export default function Home() {
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
-  const [dueDate, setDueDate] = useState("");
   const [catId, setCatId] = useState<number | null>(null);
+  const [editTask, setEditTask] = useState<Task | null>(null);
 
   useEffect(() => {
     fetchAll();
@@ -87,9 +87,6 @@ export default function Home() {
       description: desc,
       status_id: statuses[0]?.id,
     };
-    if (dueDate.trim() !== "") {
-      payload.due_date = new Date(dueDate).toISOString();
-    }
     if (catId !== null) {
       payload.category_id = catId;
     }
@@ -97,8 +94,19 @@ export default function Home() {
     setNewTaskOpen(false);
     setTitle("");
     setDesc("");
-    setDueDate("");
     setCatId(null);
+    fetchAll();
+  }
+
+  async function saveTaskEdits() {
+    if (!editTask) return;
+    const payload: Record<string, unknown> = {
+      title: editTask.title,
+      description: editTask.description ?? "",
+      category_id: editTask.category_id ?? null,
+    };
+    await axios.patch(`${API}/tasks/${editTask.id}`, payload);
+    setEditTask(null);
     fetchAll();
   }
 
@@ -122,10 +130,6 @@ export default function Home() {
               <div className="grid gap-1">
                 <label className="text-sm">Description</label>
                 <textarea className="min-h-[80px] rounded-md border border-foreground/20 px-3 py-2" value={desc} onChange={(e) => setDesc(e.target.value)} />
-              </div>
-              <div className="grid gap-1">
-                <label className="text-sm">Due date (ISO)</label>
-                <input className="h-10 rounded-md border border-foreground/20 px-3" placeholder="2025-09-30T12:00:00" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
               </div>
               <div className="grid gap-1">
                 <label className="text-sm">Category</label>
@@ -176,9 +180,18 @@ export default function Home() {
                               }
                               style={prov.draggableProps.style as React.CSSProperties}
                             >
-                              <div className="font-semibold">{t.title}</div>
+                              <div className="flex items-center justify-between">
+                                <div className="font-semibold">{t.title}</div>
+                                <div className="ml-2 text-xs">
+                                  {t.category_id && (
+                                    <span className="rounded-full border border-foreground/20 px-2 py-0.5 text-foreground/80">{categories.find(c => c.id === t.category_id)?.name}</span>
+                                  )}
+                                </div>
+                              </div>
                               <div className="text-xs text-foreground/70">{t.description}</div>
-                              <div className="text-xs text-foreground/50">{t.due_date ? new Date(t.due_date).toLocaleString() : ""}</div>
+                              <div className="mt-2 flex justify-end">
+                                <Button size="sm" variant="outline" onClick={() => setEditTask(t)}>Edit</Button>
+                              </div>
                             </div>
                           )}
                         </Draggable>
@@ -192,6 +205,44 @@ export default function Home() {
           ))}
         </div>
       </DragDropContext>
+
+      {/* Edit Task Modal */}
+      <Dialog open={!!editTask} onOpenChange={(open) => !open && setEditTask(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit task</DialogTitle>
+          </DialogHeader>
+          {editTask && (
+            <div className="space-y-3">
+              <div className="grid gap-1">
+                <label className="text-sm">Title</label>
+                <input className="h-10 rounded-md border border-foreground/20 px-3" value={editTask.title} onChange={(e) => setEditTask({ ...editTask, title: e.target.value })} />
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Description</label>
+                <textarea className="min-h-[80px] rounded-md border border-foreground/20 px-3 py-2" value={editTask.description ?? ""} onChange={(e) => setEditTask({ ...editTask, description: e.target.value })} />
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Category</label>
+                <Select value={editTask.category_id ? String(editTask.category_id) : "none"} onValueChange={(v: string) => setEditTask({ ...editTask, category_id: v === "none" ? null : parseInt(v) })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button onClick={saveTaskEdits}>Save</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

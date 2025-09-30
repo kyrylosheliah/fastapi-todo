@@ -1,0 +1,27 @@
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Python-specific files
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Environment variables
+.env
+.flaskenv
+
+# Database files
+*.sqlite
+*.db
+
+# Log files
+*.log
+
+# IDE and OS specific files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

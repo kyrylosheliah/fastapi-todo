@@ -7,6 +7,6 @@ def create_initial_if_missing(engine):
         q = s.exec(select(Status))
         statuses = q.all()
         if not statuses:
-            for i, name in enumerate(["Todo", "In Progress", "Done"]):
+            for i, name in enumerate(["In Progress", "Done"]):
                 s.add(Status(name=name, order=i))
             s.commit()

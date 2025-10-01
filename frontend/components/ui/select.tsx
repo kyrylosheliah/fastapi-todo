@@ -39,7 +39,7 @@ export const SelectContent = React.forwardRef<HTMLDivElement, React.ComponentPro
 SelectContent.displayName = "SelectContent";
 
 export const SelectItem = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof SelectPrimitive.Item>>(
-  ({ className, ...props }, ref) => (
+  ({ className, children, ...props }, ref) => (
     <SelectPrimitive.Item
       ref={ref}
       className={twMerge(
@@ -47,7 +47,9 @@ export const SelectItem = React.forwardRef<HTMLDivElement, React.ComponentProps<
         className
       )}
       {...props}
-    />
+    >
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
   )
 );
 SelectItem.displayName = "SelectItem";

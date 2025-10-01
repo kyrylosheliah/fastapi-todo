@@ -4,45 +4,62 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from sqlmodel import SQLModel, create_engine, Session, select
+from sqlalchemy import func
 from .models import Task, Status, Category
 from .crud import create_initial_if_missing
 from pydantic import BaseModel
 from datetime import datetime
+import logging
+from alembic.config import Config
+from alembic import command
 
 DATABASE_URL = os.getenv("DATABASE_URL") or "postgresql://postgres:postgres@localhost:5432/fastapi-todo"
-engine = create_engine(DATABASE_URL, echo=False)
+engine = create_engine(DATABASE_URL, echo=True)
 
-@asynccontextmanager
-async def lifespan(app_ctx: FastAPI):
-    # Run migrations and ensure tables exist
-    os.environ["DATABASE_URL"] = DATABASE_URL
-    from alembic.config import Config
-    from alembic import command
-    alembic_ini_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "alembic.ini"))
-    alembic_cfg = Config(alembic_ini_path)
+logger = logging.getLogger("uvicorn.error")
+
+def run_migrations():
+    alembic_cfg = Config()
+    alembic_cfg.set_main_option("script_location", "alembic")
+    alembic_cfg.set_main_option("sqlalchemy.url", DATABASE_URL)
     try:
         command.upgrade(alembic_cfg, "head")
+        logger.info("??? Alembic migrations applied")
     except Exception:
-        # Do not crash the server if migrations fail; log in real setup
-        pass
-    SQLModel.metadata.create_all(engine)
+        logger.exception("!!! Alembic migrations failed")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    run_migrations()
+    SQLModel.metadata.create_all(engine)  # if you still want this
     create_initial_if_missing(engine)
     yield
 
-app = FastAPI(lifespan=lifespan, docs_url="/docs", redoc_url="/redoc", openapi_url="/openapi.json")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
 
-# --- Pydantic models for payloads (keeps code short) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class TaskIn(BaseModel):
     title: str
     description: str = ""
     due_date: datetime = None
     status_id: int = None
     category_id: int = None
-    position: int | None = None
+    priority: int | None = None
 
 class StatusIn(BaseModel):
     name: str
+    order: int = None
 
 class CategoryIn(BaseModel):
     name: str
@@ -56,12 +73,41 @@ def list_statuses():
 @app.post("/statuses")
 def create_status(payload: StatusIn):
     with Session(engine) as s:
-        count = s.exec(select(Status)).count()
-        st = Status(name=payload.name, order=count)
+        count = s.exec(select(func.count(Status.id))).one()
+        order = payload.order if hasattr(payload, 'order') and payload.order is not None else count
+        st = Status(name=payload.name, order=order)
         s.add(st)
         s.commit()
         s.refresh(st)
         return st
+
+@app.patch("/statuses/{status_id}")
+def update_status(status_id: int, payload: dict):
+    with Session(engine) as s:
+        status = s.get(Status, status_id)
+        if not status:
+            raise HTTPException(404, "Status not found")
+        for k, v in payload.items():
+            if hasattr(status, k):
+                setattr(status, k, v)
+        s.add(status)
+        s.commit()
+        s.refresh(status)
+        return status
+
+@app.delete("/statuses/{status_id}")
+def delete_status(status_id: int):
+    with Session(engine) as s:
+        status = s.get(Status, status_id)
+        if not status:
+            raise HTTPException(404, "Status not found")
+        # Check if status has tasks
+        has_tasks = s.exec(select(Task).where(Task.status_id == status_id)).first() is not None
+        if has_tasks:
+            raise HTTPException(400, "Cannot delete status with tasks")
+        s.delete(status)
+        s.commit()
+        return {"ok": True}
 
 @app.get("/categories")
 def list_categories():
@@ -80,25 +126,25 @@ def create_category(payload: CategoryIn):
 @app.get("/tasks")
 def list_tasks():
     with Session(engine) as s:
-        return s.exec(select(Task).order_by(Task.status_id, Task.position, Task.created_at)).all()
+        return s.exec(select(Task).order_by(Task.status_id, Task.priority, Task.created_at)).all()
 
 @app.post("/tasks")
 def create_task(payload: TaskIn):
     with Session(engine) as s:
-        # determine position within status
+        # determine priority within status
         next_pos = 0
         if payload.status_id is not None:
             last = s.exec(
-                select(Task).where(Task.status_id == payload.status_id).order_by(Task.position.desc())
+                select(Task).where(Task.status_id == payload.status_id).order_by(Task.priority.desc())
             ).first()
-            next_pos = (last.position + 1) if last else 0
+            next_pos = (last.priority + 1) if last else 0
         t = Task(
             title=payload.title,
             description=payload.description,
             due_date=payload.due_date,
             status_id=payload.status_id,
             category_id=payload.category_id,
-            position=payload.position if payload.position is not None else next_pos,
+            priority=payload.priority if payload.priority is not None else next_pos,
         )
         s.add(t)
         s.commit()
@@ -121,14 +167,14 @@ def update_task(task_id: int, payload: dict):
 
 @app.post("/tasks/reorder")
 def reorder_tasks(moves: list[dict]):
-    """Moves is a list of {id, status_id, position}. Positions are 0-based within each status."""
+    """Moves is a list of {id, status_id, priority}. Priorities are 0-based within each status."""
     with Session(engine) as s:
         # update statuses and positions
         for m in moves:
             task = s.get(Task, int(m["id"]))
             if task:
                 task.status_id = int(m["status_id"]) if m.get("status_id") is not None else None
-                task.position = int(m["position"]) if m.get("position") is not None else 0
+                task.priority = int(m["priority"]) if m.get("priority") is not None else 0
                 s.add(task)
         s.commit()
         return {"ok": True}

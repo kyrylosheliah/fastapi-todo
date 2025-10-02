@@ -1,361 +1,337 @@
 "use client";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { Button } from "../components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { deleteTask, emptyTask, fetchAllTaskData, postTask, patchTask } from "@/data/Task/TaskHooks";
+import { ITask } from "@/data/Task/ITask";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Status = { id: number; name: string; order?: number };
 type Category = { id: number; name: string };
-type Task = { id: number; title: string; description: string; due_date: string | null; status_id: number | null; category_id: number | null; priority?: number };
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-export default function Home() {
+export default function SearchPage(){
   const [statuses, setStatuses] = useState<Status[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ITask[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const [newTaskOpen, setNewTaskOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [catId, setCatId] = useState<number | null>(null);
-  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [inProgressId, setInProgressId] = useState<number | undefined>(undefined);
+  const [doneId, setDoneId] = useState<number | undefined>(undefined);
+  const [binaryStatusesPresent, setBinaryStatusesPresent] = useState<boolean>(false);
+
   const [query, setQuery] = useState("");
-  const [catsOpen, setCatsOpen] = useState(false);
-  const [catsQuery, setCatsQuery] = useState("");
-  const [newCatName, setNewCatName] = useState("");
-  const [statusesOpen, setStatusesOpen] = useState(false);
-  const [newStatusName, setNewStatusName] = useState("");
+  const [statusFilter, setStatusFilter] = useState<number | null>(null);
+  const [sortDir, setSortDir] = useState<"asc"|"desc">("asc");
+  const [sortKey, setSortKey] = useState<"priority"|"created_at">("priority");
+
+  const [newOpen, setNewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [editTask, setEditTask] = useState<ITask | null>(null);
+
+  useEffect(() => {
+    if (dueDate && editTask) {
+      setEditTask({...editTask, due_date: dueDate.toISOString()});
+    }
+  }, [dueDate]);
+
+  async function fetchAll(){
+    const [statuses, tasks, categories] = await fetchAllTaskData();
+    setStatuses(statuses);
+    setTasks(tasks);
+    setCategories(categories);
+    setInProgressId(statuses.find(s => s.name === "In Progress")?.id);
+    setDoneId(statuses.find(s => s.name === "Done")?.id);
+    setBinaryStatusesPresent(doneId !== undefined && inProgressId !== undefined);
+  };
 
   useEffect(() => {
     fetchAll();
   }, []);
 
-  async function fetchAll() {
-    const [sRes, tRes, cRes] = await Promise.all([
-      axios.get(`${API}/statuses`),
-      axios.get(`${API}/tasks`),
-      axios.get(`${API}/categories`),
-    ]);
-    setStatuses(sRes.data);
-    setTasks(tRes.data);
-    setCategories(cRes.data);
-  }
-
-  function tasksByStatus(statusId: number | null) {
-    return tasks
-      .filter((t) => (t.status_id ?? null) === statusId)
-      .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
-  }
-
-  async function onDragEnd(result: DropResult) {
-    if (!result.destination) return;
-    const sourceStatusId = parseInt(result.source.droppableId);
-    const destStatusId = parseInt(result.destination.droppableId);
-    const draggableId = parseInt(result.draggableId);
-
-    // Build new local ordering per column
-    const sourceTasks = tasksByStatus(sourceStatusId);
-    const destTasks = sourceStatusId === destStatusId ? sourceTasks.slice() : tasksByStatus(destStatusId);
-
-    const movedTaskIndex = sourceTasks.findIndex((t) => t.id === draggableId);
-    const [moved] = sourceTasks.splice(movedTaskIndex, 1);
-    if (sourceStatusId === destStatusId) {
-      sourceTasks.splice(result.destination.index, 0, moved);
-    } else {
-      destTasks.splice(result.destination.index, 0, { ...moved, status_id: destStatusId });
-    }
-
-    // Recompute positions
-    const updates: { id: number; status_id: number; priority: number }[] = [];
-    sourceTasks.forEach((t, i) => updates.push({ id: t.id, status_id: sourceStatusId, priority: i }));
-    if (sourceStatusId !== destStatusId) {
-      destTasks.forEach((t, i) => updates.push({ id: t.id, status_id: destStatusId, priority: i }));
-    }
-
-    // Optimistic UI update
-    setTasks((prev) =>
-      prev.map((t) => {
-        const up = updates.find((u) => u.id === t.id);
-        return up ? { ...t, status_id: up.status_id, priority: up.priority } : t;
-      })
+  const filtered = useMemo(()=>{
+    const q = query.trim().toLowerCase();
+    let list = tasks.filter(t =>
+      (!statusFilter || t.status_id === statusFilter) &&
+      (!q || t.title.toLowerCase().includes(q) || (t.description||"").toLowerCase().includes(q))
     );
-
-    // Persist to backend
-    await axios.post(`${API}/tasks/reorder`, updates);
-  }
+    list = list.sort((a,b)=>{
+      const av = (sortKey === "priority" ? (a.priority ?? 0) : new Date(a.created_at || 0).getTime());
+      const bv = (sortKey === "priority" ? (b.priority ?? 0) : new Date(b.created_at || 0).getTime());
+      return sortDir === "asc" ? av - bv : bv - av;
+    })
+    return list;
+  }, [tasks, query, statusFilter, sortDir, sortKey]);
 
   async function addTask() {
-    const payload: Record<string, unknown> = {
-      title,
-      description: desc,
-      status_id: statuses[0]?.id,
-    };
-    if (catId !== null) {
-      payload.category_id = catId;
-    }
-    await axios.post(`${API}/tasks`, payload);
-    setNewTaskOpen(false);
-    setTitle("");
-    setDesc("");
-    setCatId(null);
+    if(!editTask) return;
+    await postTask(editTask);
+    setEditTask(emptyTask());
     fetchAll();
+    setNewOpen(false);
   }
 
-  async function saveTaskEdits() {
-    if (!editTask) return;
-    const payload: Record<string, unknown> = {
-      title: editTask.title,
-      description: editTask.description ?? "",
-      category_id: editTask.category_id ?? null,
-    };
-    await axios.patch(`${API}/tasks/${editTask.id}`, payload);
-    setEditTask(null);
+  async function saveTask() {
+    if(!editTask) return;
+    await patchTask(editTask);
+    setEditTask(emptyTask());
     fetchAll();
+    setEditOpen(false);
   }
 
-  async function addStatus() {
-    if (!newStatusName.trim()) return;
-    const maxOrder = Math.max(...statuses.map(s => s.order || 0), -1);
-    await axios.post(`${API}/statuses`, { name: newStatusName.trim(), order: maxOrder + 1 });
-    setNewStatusName("");
+  async function removeTask(task: ITask) {
+    await deleteTask(task);
     fetchAll();
+    setEditOpen(false);
   }
 
-  async function deleteStatus(statusId: number) {
-    // Check if status is protected
-    const status = statuses.find(s => s.id === statusId);
-    if (status?.name === "In Progress" || status?.name === "Done") return;
-
-    // Check if status has tasks
-    const hasTasks = tasks.some(t => t.status_id === statusId);
-    if (hasTasks) return;
-
-    await axios.delete(`${API}/statuses/${statusId}`);
+  async function toggleCompletion(task: ITask) {
+    if (!binaryStatusesPresent) return;
+    task.status_id = task.status_id === doneId! ? inProgressId! : doneId!;
+    await patchTask(task);
     fetchAll();
   }
-
-  async function reorderStatuses(result: DropResult) {
-    if (!result.destination) return;
-    const sourceIndex = result.source.index;
-    const destIndex = result.destination.index;
-
-    const newStatuses = [...statuses];
-    const [moved] = newStatuses.splice(sourceIndex, 1);
-    newStatuses.splice(destIndex, 0, moved);
-    
-    // Update order field
-    const updates = newStatuses.map((status, index) => ({
-      id: status.id,
-      order: index
-    }));
-
-    for (const update of updates) {
-      await axios.patch(`${API}/statuses/${update.id}`, { order: update.order });
-    }
-
-    fetchAll();
-  }
-
-  const filteredTasks = tasks.filter(t => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      t.title.toLowerCase().includes(q) ||
-      (t.description || "").toLowerCase().includes(q)
-    );
-  });
 
   return (
-    <div className="flex h-screen flex-col">
-      <div className="shrink-0 border-b border-foreground/10 p-3 flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold">Todo — Tailwind + shadcn</h2>
-        <div className="flex items-center gap-2">
-          <a className="text-sm underline" href="/search">Search page</a>
-          <Button variant="outline" onClick={() => setCatsOpen(true)}>Categories</Button>
-          <Button variant="outline" onClick={() => setStatusesOpen(true)}>Statuses</Button>
-          <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
-          <DialogTrigger asChild>
-            <Button>New task</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>New task</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div className="grid gap-1">
-                <label className="text-sm">Title</label>
-                <input className="h-10 rounded-md border border-foreground/20 px-3" value={title} onChange={(e) => setTitle(e.target.value)} />
-              </div>
-              <div className="grid gap-1">
-                <label className="text-sm">Description</label>
-                <textarea className="min-h-[80px] rounded-md border border-foreground/20 px-3 py-2" value={desc} onChange={(e) => setDesc(e.target.value)} />
-              </div>
-              <div className="grid gap-1">
-                <label className="text-sm">Category</label>
-                <Select value={catId ? String(catId) : ""} onValueChange={(v: string) => setCatId(v === "none" ? null : parseInt(v))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-end pt-2">
-                <Button onClick={addTask}>Create</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-        </div>
-      </div>
-      <div className="p-3">
-        <input
+    <>
+      <div className="mb-3 flex items-center gap-2">
+        <Input
           className="h-10 w-full max-w-md rounded-md border border-foreground/20 px-3"
           placeholder="Search tasks..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-      </div>
-
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex grow items-stretch gap-3 overflow-x-auto p-3" id="board-scroll">
-          {statuses.sort((a, b) => (a.order || 0) - (b.order || 0)).map((status) => (
-            <Droppable droppableId={String(status.id)} key={status.id} renderClone={(provided, snapshot, rubric) => {
-              const t = tasksByStatus(parseInt(rubric.source.droppableId)).filter(t => filteredTasks.some(ft => ft.id === t.id))[rubric.source.index];
-              if (!t) return null;
-              return (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.draggableProps}
-                  {...provided.dragHandleProps}
-                  className="mt-2 w-[320px] rounded-md bg-white p-2 shadow-sm dark:bg-zinc-900 ring-2 ring-foreground/50"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">{t.title}</div>
-                    <div className="ml-2 text-xs">
-                      {t.category_id && (
-                        <span className="rounded-full border border-foreground/20 px-2 py-0.5 text-foreground/80">{categories.find(c => c.id === t.category_id)?.name}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-xs text-foreground/70">{t.description}</div>
-                </div>
-              );
-            }}>
-              {(provided, snapshot) => (
-                <div ref={provided.innerRef} {...provided.droppableProps} className="w-[360px] shrink-0">
-                  <div
-                    className={
-                      "flex h-full flex-col rounded-lg border border-foreground/10 bg-background p-3 shadow-sm transition-colors" +
-                      (snapshot.isDraggingOver ? " outline outline-2 outline-dashed outline-foreground/30 bg-foreground/5 outline-offset-[-2px]" : "")
-                    }
-                  >
-                    <h4 className="text-base font-medium">{status.name}</h4>
-                    <div className="mt-2 min-h-0 grow overflow-y-auto space-y-2">
-                      {tasksByStatus(status.id).filter(t => filteredTasks.some(ft => ft.id === t.id)).map((t, idx) => (
-                        <Draggable draggableId={String(t.id)} index={idx} key={t.id}>
-                          {(prov, dragSnapshot) => (
-                            <div
-                              ref={prov.innerRef}
-                              {...prov.draggableProps}
-                              {...prov.dragHandleProps}
-                              className={
-                                "w-[320px] rounded-md bg-white p-2 shadow-sm dark:bg-zinc-900 transition-transform" +
-                                (dragSnapshot.isDragging ? " ring-2 ring-foreground/50 scale-[1.01]" : "")
-                              }
-                              style={prov.draggableProps.style as React.CSSProperties}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="font-semibold">{t.title}</div>
-                                <div className="ml-2 text-xs">
-                                  {t.category_id && (
-                                    <span className="rounded-full border border-foreground/20 px-2 py-0.5 text-foreground/80">{categories.find(c => c.id === t.category_id)?.name}</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="text-xs text-foreground/70">{t.description}</div>
-                              <div className="mt-2 flex justify-end">
-                                <Button size="sm" variant="outline" onClick={() => setEditTask(t)}>Edit</Button>
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Droppable>
+        <div className="flex gap-2">
+          {statuses.map((s) => (
+            <button
+              key={"task_chip_button_" + s.id}
+              className={`rounded-full border px-3 py-1 text-sm ${
+                statusFilter === s.id ? "bg-foreground text-background" : ""
+              }`}
+              onClick={() =>
+                setStatusFilter(statusFilter === s.id ? null : s.id)
+              }
+            >
+              {s.name}
+            </button>
           ))}
         </div>
-      </DragDropContext>
+      </div>
 
-      {/* Categories Modal: list/search/add */}
-      <Dialog open={catsOpen} onOpenChange={setCatsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Categories</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <input className="h-10 w-full rounded-md border border-foreground/20 px-3" placeholder="Search categories..." value={catsQuery} onChange={(e)=>setCatsQuery(e.target.value)} />
-            <div className="max-h-[50vh] overflow-y-auto border border-foreground/10 rounded-md">
-              {(categories.filter(c=>c.name.toLowerCase().includes(catsQuery.toLowerCase()))).map(c => (
-                <div key={c.id} className="flex items-center justify-between px-3 py-2 border-b last:border-b-0 border-foreground/10">
-                  <div>{c.name}</div>
+      <div className="mb-3 flex items-center gap-2">
+        <Select value={sortKey} onValueChange={(v) => setSortKey(v as any)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="priority">Priority</SelectItem>
+            <SelectItem value="created_at">Created</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortDir} onValueChange={(v) => setSortDir(v as any)}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Direction" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="asc">Ascending</SelectItem>
+            <SelectItem value="desc">Descending</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setEditTask(emptyTask());
+            setNewOpen(true);
+          }}
+        >
+          New Task
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        {filtered.map((t) => (
+          <div
+            key={"task__" + t.id}
+            className="rounded-md border border-foreground/10 bg-background p-3 shadow-sm"
+          >
+            <div className="flex items-center justify-between">
+              {binaryStatusesPresent && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={t.status_id === doneId}
+                    onCheckedChange={() => toggleCompletion(t)}
+                    className="h-4 w-4"
+                  />
+                  <div className="font-medium">{t.title}</div>
                 </div>
-              ))}
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm">Add new</label>
-              <div className="flex gap-2">
-                <input className="h-10 flex-1 rounded-md border border-foreground/20 px-3" value={newCatName} onChange={(e)=>setNewCatName(e.target.value)} placeholder="Category name" />
-                <Button onClick={async ()=>{ if(!newCatName.trim()) return; await axios.post(`${API}/categories`, { name: newCatName.trim() }); setNewCatName(""); fetchAll(); }}>Add</Button>
+              )}
+              <div className="ml-2 text-xs">
+                {t.category_id && (
+                  <span className="rounded-full border border-foreground/20 px-2 py-0.5 text-foreground/80">
+                    {categories.find((c) => c.id === t.category_id)?.name}
+                  </span>
+                )}
               </div>
             </div>
+            <div className="text-xs text-foreground/70">{t.description}</div>
+            <div className="mt-2 flex justify-end gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditTask(t);
+                  setEditOpen(true);
+                }}
+              >
+                Edit
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => removeTask(t)}>
+                Delete
+              </Button>
+            </div>
           </div>
+        ))}
+      </div>
+
+      <Dialog open={newOpen} onOpenChange={setNewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New task</DialogTitle>
+          </DialogHeader>
+          {editTask && (
+            <div className="space-y-3">
+              <div className="grid gap-1">
+                <label className="text-sm">Title</label>
+                <Input
+                  className="h-10 rounded-md border border-foreground/20 px-3"
+                  value={editTask!.title}
+                  onChange={(e) =>
+                    setEditTask({ ...editTask!, title: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Description</label>
+                <textarea
+                  className="min-h-[80px] rounded-md border border-foreground/20 px-3 py-2"
+                  value={editTask!.description}
+                  onChange={(e) =>
+                    setEditTask({ ...editTask!, description: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Status</label>
+                <Select
+                  value={
+                    editTask!.status_id ? String(editTask!.status_id) : "none"
+                  }
+                  onValueChange={(v) =>
+                    setEditTask({
+                      ...editTask!,
+                      status_id: v === "none" ? null : parseInt(v),
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Default</SelectItem>
+                    {statuses.map((s) => (
+                      <SelectItem key={"status_selection__" + s.id} value={String(s.id)}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Category</label>
+                <Select
+                  value={
+                    editTask!.category_id
+                      ? String(editTask!.category_id)
+                      : "none"
+                  }
+                  onValueChange={(v) =>
+                    setEditTask({
+                      ...editTask!,
+                      category_id: v === "none" ? null : parseInt(v),
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={"category_selection__" + c.id} value={String(c.id)}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Priority</label>
+                <Input
+                  type="number"
+                  onChange={(e) =>
+                    setEditTask({
+                      ...editTask!,
+                      priority: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Due date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      data-empty={!dueDate}
+                      className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
+                    >
+                      <CalendarIcon />
+                      {dueDate ? (
+                        format(dueDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={setDueDate}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Button
+                variant="outline"
+                className="flex justify-end pt-2"
+                onClick={addTask}
+              >
+                Create
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
-      {/* Statuses Modal */}
-      <Dialog open={statusesOpen} onOpenChange={setStatusesOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Statuses</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-2">
-              {statuses.sort((a, b) => (a.order || 0) - (b.order || 0)).map((status) => (
-                <div key={status.id} className="flex items-center justify-between px-3 py-2 border border-foreground/10 rounded-md">
-                  <div>{status.name}</div>
-                  <div className="flex gap-2">
-                    {status.name !== "In Progress" && status.name !== "Done" && !tasks.some(t => t.status_id === status.id) && (
-                      <Button size="sm" variant="outline" onClick={() => deleteStatus(status.id)}>Delete</Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="grid gap-2">
-              <label className="text-sm">Add new status</label>
-              <div className="flex gap-2">
-                <input className="h-10 flex-1 rounded-md border border-foreground/20 px-3" value={newStatusName} onChange={(e) => setNewStatusName(e.target.value)} placeholder="Status name" />
-                <Button onClick={addStatus}>Add</Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Task Modal */}
-      <Dialog open={!!editTask} onOpenChange={(open) => !open && setEditTask(null)}>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit task</DialogTitle>
@@ -364,36 +340,88 @@ export default function Home() {
             <div className="space-y-3">
               <div className="grid gap-1">
                 <label className="text-sm">Title</label>
-                <input className="h-10 rounded-md border border-foreground/20 px-3" value={editTask.title} onChange={(e) => setEditTask({ ...editTask, title: e.target.value })} />
+                <Input
+                  className="h-10 rounded-md border border-foreground/20 px-3"
+                  value={editTask.title}
+                  onChange={(e) =>
+                    setEditTask({ ...editTask, title: e.target.value })
+                  }
+                />
               </div>
               <div className="grid gap-1">
                 <label className="text-sm">Description</label>
-                <textarea className="min-h-[80px] rounded-md border border-foreground/20 px-3 py-2" value={editTask.description ?? ""} onChange={(e) => setEditTask({ ...editTask, description: e.target.value })} />
+                <textarea
+                  className="min-h-[80px] rounded-md border border-foreground/20 px-3 py-2"
+                  value={editTask.description ?? ""}
+                  onChange={(e) =>
+                    setEditTask({ ...editTask, description: e.target.value })
+                  }
+                />
+              </div>
+              <div className="grid gap-1">
+                <label className="text-sm">Status</label>
+                <Select
+                  value={
+                    editTask.status_id ? String(editTask.status_id) : "none"
+                  }
+                  onValueChange={(v) =>
+                    setEditTask({
+                      ...editTask,
+                      status_id: v === "none" ? null : parseInt(v),
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Default</SelectItem>
+                    {statuses.map((s) => (
+                      <SelectItem key={"status_selection__" + s.id} value={String(s.id)}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-1">
                 <label className="text-sm">Category</label>
-                <Select value={editTask.category_id ? String(editTask.category_id) : "none"} onValueChange={(v: string) => setEditTask({ ...editTask, category_id: v === "none" ? null : parseInt(v) })}>
+                <Select
+                  value={
+                    editTask.category_id ? String(editTask.category_id) : "none"
+                  }
+                  onValueChange={(v) =>
+                    setEditTask({
+                      ...editTask,
+                      category_id: v === "none" ? null : parseInt(v),
+                    })
+                  }
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="None" />
+                    <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {categories.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                      <SelectItem key={"category_selection__" + c.id} value={String(c.id)}>
+                        {c.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex justify-between pt-2">
-                <Button variant="outline" onClick={async () => { if (!editTask) return; await axios.delete(`${API}/tasks/${editTask.id}`); setEditTask(null); fetchAll(); }}>Delete</Button>
+                <Button variant="outline" onClick={() => removeTask(editTask)}>
+                  Delete
+                </Button>
                 <div>
-                  <Button onClick={saveTaskEdits}>Save</Button>
+                  <Button onClick={saveTask}>Save</Button>
                 </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

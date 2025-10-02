@@ -24,7 +24,7 @@ def run_migrations():
     alembic_cfg.set_main_option("sqlalchemy.url", DATABASE_URL)
     try:
         command.upgrade(alembic_cfg, "head")
-        logger.info("??? Alembic migrations applied")
+        logger.info("Successfully applied Alembic migrations")
     except Exception:
         logger.exception("!!! Alembic migrations failed")
 

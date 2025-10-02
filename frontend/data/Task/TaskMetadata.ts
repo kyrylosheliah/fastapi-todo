@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "../../types/EntityMetadata";
+import { EntityMetadata } from "@/data/EntityMetadata";
 import { TaskBadge } from "./TaskBadge";
 import { TaskDTO } from "./TaskDTO";
 import { ITask } from "./ITask";
@@ -15,7 +15,7 @@ export const TaskMetadata: EntityMetadata<
     id: { label: "Id", type: "key", constant: true },
     title: { label: "Title", type: "text" },
     description: { label: "Description", type: "text" },
-    due_date: { label: "Due date", type: "text", nullable: true },
+    due_date: { label: "Due date", type: "date", nullable: true },
     status_id: {
       label: "Status",
       type: "fkey",

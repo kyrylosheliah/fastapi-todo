@@ -12,17 +12,15 @@ export const emptyTask = (): ITask => ({
   created_at: "",
 });
 
-export const getStatuses = async () => emitHttpJson("GET", "/statuses");
+export const getStatuses = async () => emitHttpJson("GET", "/status/all");
 
-export const getTasks = async () => emitHttpJson("GET", "/tasks");
+export const getTasks = async () => emitHttpJson("GET", "/task/all");
 
-export const getCategories = async () => emitHttpJson("GET", "/categories");
+export const getCategories = async () => emitHttpJson("GET", "/category/all");
 
-export const postTask = async (task: ITask) => await emitHttpJson("POST", "/tasks", task);
+export const postTask = async (task: ITask) => await emitHttpJson("POST", "/task", task);
 
-// export const putTask = async (task: ITask) => await emitHttpJson("PUT", `/tasks/${task.id}`, task);
-
-export const patchTask = async (task: ITask) => await emitHttpJson("PATCH", `/tasks/${task.id}`, task);
+export const patchTask = async (task: ITask) => await emitHttpJson("PUT", `/task/${task.id}`, task);
 
 export const fetchAllTaskData = async () => Promise.all([
   getStatuses().then(r => r.json()),
@@ -30,4 +28,4 @@ export const fetchAllTaskData = async () => Promise.all([
   getCategories().then(r => r.json()),
 ]);
 
-export const deleteTask = async (task: ITask) => await emitHttp("DELETE", `/tasks/${task.id}`);
+export const deleteTask = async (task: ITask) => await emitHttp("DELETE", `/task/${task.id}`);

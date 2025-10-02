@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { getDefaultSearchParamsString } from "../types/Search";
 import Link from "next/link";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { MenuIcon, Moon, Sun, XIcon } from "lucide-react";
@@ -8,6 +7,7 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuL
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { getDefaultSearchParamsString } from "@/data/Search";
 
 const defaultSearchString = getDefaultSearchParamsString();
 
@@ -16,7 +16,6 @@ const paths = [
   { label: "Tasks", href: "/tasks?" + defaultSearchString },
   { label: "Statuses", href: "/statuses?" + defaultSearchString },
   { label: "Categories", href: "/categories?" + defaultSearchString },
-  { label: "List", href: "/list" },
   { label: "Kanban", href: "/kanban" },
 ];
 

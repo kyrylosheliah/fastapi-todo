@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { ReactNode } from "react";
-import type { Entity } from "../types/EntityEntity";
-import { EntityServiceRegistry } from "../data/EntityServiceRegistry";
+import { Entity } from "./Entity";
+import { EntityServiceRegistry } from "@/services/EntityServiceRegistry";
 
 export type EntityMetadata<
   T extends Entity,
@@ -40,24 +40,25 @@ export type DatabaseType =
   | "fkey"
   | "enum"
   //| "datetime"
-  //| "date"
-  //| "number"
+  | "date"
+  | "number"
   //| "decimal"
   //| "string"
   | "text"
   | "boolean"
   //| "char";
 
-export const fieldMetadataDefaultValue = (
+export const fieldMetadataInitialValue = (
   fieldMetadata: EntityFieldMetadata,
 ) => {
-  if (fieldMetadata.nullable) {
-    return null;
-  }
   switch (fieldMetadata.type) {
     case "key":
       return 0;
     case "fkey":
+      return 0;
+    case "date":
+      return new Date().toISOString();
+    case "number":
       return 0;
     case "text":
       return "";
@@ -70,23 +71,13 @@ export const fieldMetadataDefaultValue = (
   }
 };
 
-export const fieldMetadataInitialValue = (
+export const fieldMetadataDefaultValue = (
   fieldMetadata: EntityFieldMetadata,
 ) => {
-  switch (fieldMetadata.type) {
-    case "key":
-      return 0;
-    case "fkey":
-      return 0;
-    case "text":
-      return "";
-    case "boolean":
-      return false;
-    case "enum":
-      return fieldMetadata.enum!.default;
-    default:
-      return null;
+  if (fieldMetadata.nullable) {
+    return null;
   }
+  return fieldMetadataInitialValue(fieldMetadata);
 };
 
 export const entityDefaultValues = <T extends Entity>(fields: {

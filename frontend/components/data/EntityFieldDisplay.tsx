@@ -2,15 +2,15 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import type { FieldValues, Path } from "react-hook-form";
 import type { z } from "zod";
-import type { EntityFieldMetadata } from "../../types/EntityMetadata";
-import type EntityService from "../../services/EntityService";
-import { EntityServiceRegistry } from "../../services/EntityServiceRegistry";
 import { EntityForm } from "./EntityForm";
 import { CircleOffIcon, LinkIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Entity } from "@/types/Entity";
 import ButtonIcon from "../ButtonIcon";
 import { Popover } from "../Popover";
+import { Entity } from "@/data/Entity";
+import { EntityFieldMetadata } from "@/data/EntityMetadata";
+import EntityService from "@/data/EntityService";
+import { EntityServiceRegistry } from "@/data/entityServiceRegistry";
 
 export const EntityFieldDisplay = <
   T extends Entity,

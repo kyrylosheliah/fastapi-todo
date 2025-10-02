@@ -1,27 +1,20 @@
 import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type PaginationState, type RowSelectionState, type SortingState } from "@tanstack/react-table";
-import { useNavigate } from "@tanstack/react-router";
-import { SearchSchema, searchStatesToParameters, type SearchParams } from "../../types/Search";
 import type { z } from "zod";
-import type EntityService from "../../services/entity/EntityService";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import type { ReactNode } from "react";
 import { EntityForm } from "./EntityForm";
-import { entityDefaultValues } from "../../types/EntityMetadata";
-import type { Entity } from "../../types/Entity";
-import { IconChevronDown } from "../icons/ChevronDown";
-import { IconChevronLeft } from "../icons/ChevronLeft";
-import { IconChevronRight } from "../icons/ChevronRight";
-import { IconChevronUp } from "../icons/ChevronUp";
-import { IconEdit } from "../icons/Edit";
-import { IconMagnifier } from "../icons/Magnifier";
-import { IconPlus } from "../icons/Plus";
-import { IconTrashBin } from "../icons/TrashBin";
-import ButtonIcon from "../ui/ButtonIcon";
-import ButtonText from "../ui/ButtonText";
-import { Checkbox } from "../ui/Checkbox";
-import { Modal } from "../ui/Modal";
+import { useRouter } from "next/router";
+import { Checkbox } from "@/components/Checkbox";
+import ButtonText from "@/components/ButtonText";
+import ButtonIcon from "@/components/ButtonIcon";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SearchIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
+import { Modal } from "@/components/Modal";
+import { Entity } from "@/data/Entity";
+import { entityDefaultValues } from "@/data/EntityMetadata";
+import { SearchParams, searchStatesToParameters, SearchSchema } from "@/data/Search";
+import EntityService from "@/data/EntityService";
 
 export function EntityTable<
   T extends Entity,
@@ -92,7 +85,7 @@ export function EntityTable<
     if (!result.success) {
       console.log(result.error.format());
       console.log(nextSearch);
-      alert(`Invalid search parameters, ${result.error.format()}`);
+      // window.alert(`Invalid search parameters, ${result.error.format()}`);
       return sourceParameters;
     }
     return nextSearch;
@@ -137,10 +130,10 @@ export function EntityTable<
 
   const { data, isPending } = service.useSearch(searchParams);
 
-  const entities = data !== undefined ? data.items : [];
+  const entities = data !== undefined ? data.items || [] : [];
   const pageCount = data !== undefined ? data.pageCount : 0;
 
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>(
     params.pickerState !== undefined && params.pickerState[0] !== undefined
@@ -215,10 +208,7 @@ export function EntityTable<
       cell: ({ row }) => (
         <ButtonText
           props={{
-            onClick: () =>
-              navigate({
-                to: `${metadata.indexPagePrefix}/${row.original.id}`,
-              }),
+            onClick: () => router.push(`${metadata.indexPagePrefix}/${row.original.id}`),
           }}
         >
           Open
@@ -266,7 +256,7 @@ export function EntityTable<
     >
       <div className="w-full h-8 gap-2 flex flex-row justify-between items-center">
         <ButtonIcon className="w-8 h-8" props={{ disabled: true }}>
-          <IconMagnifier />
+          <SearchIcon />
         </ButtonIcon>
         <input
           type="text"
@@ -296,7 +286,7 @@ export function EntityTable<
                 onClick: () => setCreateOpened(true),
               }}
             >
-              <IconPlus />
+              <PlusIcon />
             </ButtonIcon>
           </>
         )}
@@ -318,7 +308,7 @@ export function EntityTable<
                 onClick: () => setUpdateOpened(true),
               }}
             >
-              <IconEdit />
+              <SquarePenIcon />
             </ButtonIcon>
             <ButtonIcon
               className="w-8 h-8"
@@ -327,7 +317,7 @@ export function EntityTable<
                 onClick: () => deleteMuatation.mutateAsync(selectedRowId),
               }}
             >
-              <IconTrashBin />
+              <Trash2Icon />
             </ButtonIcon>
           </>
         )}
@@ -354,8 +344,8 @@ export function EntityTable<
                         )}
                         {
                           {
-                            asc: <IconChevronDown />,
-                            desc: <IconChevronUp />,
+                            asc: <ChevronDownIcon />,
+                            desc: <ChevronUpIcon />,
                           }[header.column.getIsSorted() as string]
                         }
                       </div>
@@ -396,7 +386,7 @@ export function EntityTable<
           }}
           className="w-8 h-8"
         >
-          <IconChevronLeft />
+          <ChevronLeftIcon />
         </ButtonIcon>
         <span>
           {`Page ${table.getPageCount() && `${pagination.pageIndex + 1} of ${table.getPageCount()}`} `}
@@ -408,7 +398,7 @@ export function EntityTable<
           }}
           className="w-8 h-8"
         >
-          <IconChevronRight />
+          <ChevronRightIcon />
         </ButtonIcon>
       </div>
     </div>

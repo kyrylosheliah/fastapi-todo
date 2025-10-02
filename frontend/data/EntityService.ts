@@ -1,9 +1,9 @@
 import type { z } from "zod";
-import { type SearchParams, type SearchResponse } from "../types/Search";
 import { emitHttp, emitHttpJson } from "../utils/api";
-import { type EntityMetadata } from "../types/EntityMetadata";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Entity } from "../types/Entity";
+import { Entity } from "@/data/Entity";
+import { EntityMetadata } from "@/data/EntityMetadata";
+import { SearchParams, SearchResponse } from "@/data/Search";
 
 export default class EntityService<
   T extends Entity,

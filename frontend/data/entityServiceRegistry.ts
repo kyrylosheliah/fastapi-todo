@@ -1,9 +1,9 @@
-import { ProjectService } from "../../entities/project/Project.service";
-import { TaskService } from "../../entities/task/Task.service";
-import { UserService } from "../../entities/user/User.service";
+import { TaskService } from "@/data/Task/TaskService";
+import { StatusService } from "@/data/Status/StatusService";
+import { CategoryService } from "@/data/Category/CategoryService";
 
 export const EntityServiceRegistry = {
-  "/user": UserService,
   "/task": TaskService,
-  "/project": ProjectService,
+  "/status": StatusService,
+  "/category": CategoryService,
 };

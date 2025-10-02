@@ -1,19 +1,19 @@
 import { useMemo, useState, useEffect } from "react";
 import { type FieldValues, type UseFormReturn, type Path, useWatch } from "react-hook-form";
 import type { z } from "zod";
-import { type DatabaseType, fieldMetadataInitialValue } from "../../types/EntityMetadata";
-import type EntityService from "../../services/EntityService";
-import { type SearchParams, defaultSearchParams } from "../../types/Search";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import { EntityTable } from "./EntityTable";
-import type { Entity } from "../../types/Entity";
-import { EntityServiceRegistry } from "../../services/EntityServiceRegistry";
 import ButtonText from "../ButtonText";
 import ButtonIcon from "../ButtonIcon";
 import { CheckIcon, CircleOffIcon, EditIcon, PlusIcon } from "lucide-react";
 import { Checkbox } from "../Checkbox";
 import { Modal } from "../Modal";
+import { Entity } from "@/data/Entity";
+import { DatabaseType, fieldMetadataInitialValue } from "@/data/EntityMetadata";
+import { SearchParams, defaultSearchParams } from "@/data/Search";
+import EntityService from "@/data/EntityService";
+import { EntityServiceRegistry } from "@/data/entityServiceRegistry";
 
 export const EntityFormField = <
   T extends Entity,

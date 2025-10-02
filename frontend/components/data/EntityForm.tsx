@@ -2,10 +2,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import type EntityService from "../../services/EntityService";
 import { EntityFormField } from "./EntityFormField";
-import type { Entity } from "../../types/Entity";
 import ButtonText from "../ButtonText";
+import { type FieldValues } from "react-hook-form";
+import { Entity } from "@/data/Entity";
+import EntityService from "@/data/EntityService";
 
 export const EntityForm = <
   T extends Entity,
@@ -21,8 +22,8 @@ export const EntityForm = <
 
   const defaultFormFields = params.service.getFormFields(params.entity);
 
-  const form = useForm<Omit<T, 'id'>>({
-    resolver: zodResolver(metadata.formSchema),
+  const form = useForm<FieldValues>({
+    resolver: zodResolver(metadata.formSchema as any), // TODO: typescript
     defaultValues: defaultFormFields as any,
   });
 
@@ -35,9 +36,9 @@ export const EntityForm = <
   const RootTag = params.edit ? "form" : "div";
 
   const onSubmit = params.edit
-    ? form.handleSubmit((newFields: Omit<T, "id">) =>
+    ? form.handleSubmit(((newFields: any) => // TODO: typescript
         params.onSubmit(newFields)
-      )
+      ))
     : undefined;
 
   return (

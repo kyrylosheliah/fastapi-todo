@@ -1,0 +1,30 @@
+import { EntityTable } from "@/components/data/EntityTable";
+import { SearchParams, toSearchParamsString } from "@/data/Search";
+import { StatusService } from "@/data/Status/StatusService";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
+
+export default function StatusesPage() {
+  const router = useRouter();
+
+  const pathname = usePathname();
+
+  const searchParams = Object.fromEntries(useSearchParams().entries());
+
+  const search = searchParams as unknown as SearchParams;
+
+  return (<div>
+    <h1 className="text-2xl mb-2">Statuses</h1>
+    <EntityTable
+      traverse
+      edit
+      service={StatusService}
+      searchParams={{
+        value: search,
+        set: (nextSearch: SearchParams) => {
+          router.replace(pathname + "?" + toSearchParamsString(nextSearch))
+        },
+      }}
+    />
+  </div>);
+}

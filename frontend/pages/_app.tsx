@@ -16,7 +16,11 @@ export default function App({ Component, pageProps }: AppProps) {
     >
       <NavigationHeader />
       <QueryClientProvider client={queryClient}>
-        <Component {...pageProps} />
+        <div className="p-4 w-full h-full flex items-center justify-center">
+          <div className="w-full h-full max-w-5xl">
+          <Component {...pageProps} />
+          </div>
+        </div>
       </QueryClientProvider>
     </ThemeProvider>
   );

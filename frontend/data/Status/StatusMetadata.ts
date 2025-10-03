@@ -14,7 +14,7 @@ export const StatusMetadata: EntityMetadata<
   fields: {
     id: { label: "Id", type: "key", constant: true },
     name: { label: "Title", type: "text" },
-    order: { label: "Priority", type: "number", nullable: true },
+    order: { label: "Order", type: "number", nullable: true },
   },
   relations: [
     {

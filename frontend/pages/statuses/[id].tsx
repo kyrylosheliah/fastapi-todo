@@ -7,5 +7,9 @@ export default function SpecificStatusPage() {
   const router = useRouter();
   const id = router.query.id === undefined ? "" : router.query.id.toString();
 
-  return <EntityInfo entityId={id} service={StatusService} />;
+  return (
+    <div>
+      <EntityInfo entityId={id} service={StatusService} />
+    </div>
+  );
 }

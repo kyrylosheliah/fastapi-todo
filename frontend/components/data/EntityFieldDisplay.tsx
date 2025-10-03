@@ -1,16 +1,16 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
 import type { FieldValues, Path } from "react-hook-form";
 import type { z } from "zod";
 import { EntityForm } from "./EntityForm";
-import { CircleOffIcon, LinkIcon } from "lucide-react";
+import { CalendarIcon, CircleOffIcon, ClockIcon, LinkIcon, SquareArrowUpRightIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ButtonIcon from "../ButtonIcon";
-import { Popover } from "../Popover";
 import { Entity } from "@/data/Entity";
 import { EntityFieldMetadata } from "@/data/EntityMetadata";
 import EntityService from "@/data/EntityService";
-import { EntityServiceRegistry } from "@/data/entityServiceRegistry";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { BadgeIcon } from "@/components/BadgeIcon";
+import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 
 export const EntityFieldDisplay = <
   T extends Entity,
@@ -36,8 +36,16 @@ export const EntityFieldDisplay = <
   }
   switch (fieldMetadata.type) {
     case "key":
-    //case "number":
+    case "number":
       return `${new String(params.fieldValue)}`;
+    case "date":
+      const date = new Date(params.fieldValue);
+      return (<div>
+        <BadgeIcon
+          children={isNaN(date.getTime()) ? "???" : date.toDateString()}
+          icon={<CalendarIcon size={16} />}
+        />
+      </div>);
     case "boolean":
       return params.fieldValue ? "yes" : "no";
     case "text":
@@ -69,6 +77,7 @@ const EntityFkField = (params: {
   if (params.fkId === 0) {
     return (
       <Badge
+        variant={params.fieldMetadata.nullable !== true ? "destructive" : undefined}
         className="fw-700"
         children={<div className="px-2">unspecified</div>}
       />
@@ -78,39 +87,33 @@ const EntityFkField = (params: {
   const fkMetadata = fkService.metadata;
   const { data, isPending } = fkService.useGet(params.fkId);
   const loadingElement = <div>...</div>;
-  const [popoverOpen, setPopoverOpen] = useState<boolean>(false);
   return isPending || data === undefined ? (
     loadingElement
   ) : params.breakPopover ? (
     fkMetadata.peekComponent(data as any)
   ) : (
-    <Popover
-      hover
-      stickyParent
-      controlled={[popoverOpen, setPopoverOpen]}
-      coord={{ x: "center", y: "end" }}
-      target={fkMetadata.peekComponent(data as any)}
-      popover={
-        <div className="z-20 inline-block bg-white border rounded-md shadow-md flex flex-row items-start">
-          <div className="py-4 pl-4">
-            <EntityForm
-              edit={false}
-              entity={data as any}
-              onSubmit={() => {}}
-              service={fkService as any}
-              breakPopover
-            />
-          </div>
-          <ButtonIcon
-            children={<LinkIcon />}
-            props={{
-              className: "mr-1 mt-1",
-              onClick: () =>
-                router.push(`${fkMetadata.indexPagePrefix}/${params.fkId}`),
-            }}
+    <HoverCard>
+      <HoverCardTrigger>
+        {fkMetadata.peekComponent(data as any)}
+      </HoverCardTrigger>
+      <HoverCardContent className="p-0 w-full inline-block border rounded-md shadow-md flex flex-row items-start">
+        <div className="py-4 pl-4">
+          <EntityForm
+            edit={false}
+            entity={data as any}
+            onSubmit={() => {}}
+            service={fkService as any}
+            breakPopover
           />
         </div>
-      }
-    />
+        <ButtonIcon
+          children={<SquareArrowUpRightIcon size={16} />}
+          props={{
+            onClick: () =>
+              router.push(`${fkMetadata.indexPagePrefix}/${params.fkId}`),
+          }}
+        />
+      </HoverCardContent>
+    </HoverCard>
   );
 };

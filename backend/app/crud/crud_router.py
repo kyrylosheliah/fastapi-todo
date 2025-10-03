@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Generic, TypeVar, Type, List, Callable
 from .crud_service import BaseCrudService
-from .crud_search_dtos import SearchEntitiesDto
+from .crud_search_dtos import EntitySearchDto
 
 from app.crud.crud_service import BaseCrudService
 
@@ -34,7 +34,7 @@ class BaseCrudRouter(Generic[T, CreateDto, UpdateDto]):
     def _register_routes(self):
         @self.router.post("/search")
         def search(
-            search_dto: SearchEntitiesDto,
+            search_dto: EntitySearchDto,
             db: Session = Depends(self.get_database)
         ):
             return self.service.search(db, search_dto)

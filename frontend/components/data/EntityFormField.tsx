@@ -6,14 +6,21 @@ import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import { EntityTable } from "./EntityTable";
 import ButtonText from "../ButtonText";
 import ButtonIcon from "../ButtonIcon";
-import { CheckIcon, CircleOffIcon, EditIcon, PlusIcon } from "lucide-react";
+import { CalendarIcon, CheckIcon, CircleOffIcon, EditIcon, PlusIcon, XIcon } from "lucide-react";
 import { Checkbox } from "../Checkbox";
 import { Modal } from "../Modal";
 import { Entity } from "@/data/Entity";
 import { DatabaseType, fieldMetadataInitialValue } from "@/data/EntityMetadata";
 import { SearchParams, defaultSearchParams } from "@/data/Search";
 import EntityService from "@/data/EntityService";
-import { EntityServiceRegistry } from "@/data/entityServiceRegistry";
+import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
 
 export const EntityFormField = <
   T extends Entity,
@@ -31,6 +38,9 @@ export const EntityFormField = <
   const errors = params.form.formState.errors;
 
   const fieldMetadata = params.service.metadata.fields[params.fieldKey];
+  if (params.fieldKey === undefined || fieldMetadata === undefined) {
+    return (<span>unspecified field metadata</span>);
+  }
 
   const keyOrConst =
     fieldMetadata.constant === true || fieldMetadata.type === "key";
@@ -49,10 +59,10 @@ export const EntityFormField = <
     <div>
       <div className="gap-2 flex flex-row items-center justify-between">
         <div className="gap-2 flex flex-row items-center">
-          <label
+          <Label
             htmlFor={params.fieldKey.toString()}
             children={metadata.fields[params.fieldKey].label}
-            className="block text-sm fw-700 text-gray-900"
+            className="block text-sm fw-700"
           />
           <EntityFieldIcon fieldType={metadata.fields[params.fieldKey].type} />
         </div>
@@ -69,15 +79,12 @@ export const EntityFormField = <
               </ButtonText>
             )}
             {fieldMetadata.nullable === true && fieldValue !== null && (
-              <ButtonText
+              <ButtonIcon
                 props={{
-                  onClick: () =>
-                    params.form.setValue(params.fieldKey, null as any),
-                  className: "text-sm",
+                  onClick: () => params.form.setValue(params.fieldKey, null as any),
                 }}
-              >
-                unset?
-              </ButtonText>
+                children={<XIcon size={16} />}
+              />
             )}
           </div>
         )}
@@ -208,7 +215,7 @@ const EntityFieldInput = <
           ? "border-red-400"
           : isDirty
             ? "border-yellow-600"
-            : "border-gray-300"
+            : ""
       ),
     [params.form.formState.errors, isDirty]
   );
@@ -217,11 +224,48 @@ const EntityFieldInput = <
   switch (fieldMetadata.type) {
     case "key":
       return (
-        <input
+        <Input
           {...params.form.register(params.fieldKey)}
           disabled={disabled}
           className={commonClasses}
         />
+      );
+    case "number":
+      return (
+        <Input
+          {...params.form.register(params.fieldKey, { valueAsNumber: true })}
+          type="number"
+          disabled={disabled}
+          className={commonClasses}
+        />
+      );
+    case "date":
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              data-empty={!params.fieldValue}
+              className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
+            >
+              <CalendarIcon />
+              {params.fieldValue ? (
+                format(params.fieldValue, "PPP")
+              ) : (
+                <span>Pick a date</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={params.fieldValue && !isNaN(new Date(params.fieldValue).getTime())}
+              onSelect={(v) =>
+                params.form.setValue(params.fieldKey, v && v.toISOString())
+              }
+            />
+          </PopoverContent>
+        </Popover>
       );
     case "boolean":
       return (
@@ -235,7 +279,7 @@ const EntityFieldInput = <
       );
     case "text":
       return (
-        <textarea
+        <Textarea
           {...params.form.register(params.fieldKey)}
           disabled={disabled}
           className={commonClasses}
@@ -260,7 +304,7 @@ const EntityFieldInput = <
           size={enumEntries.length}
           className={cx(
             commonClasses,
-            "bg-gray-50 border text-gray-900 text-sm rounded-lg block w-full p-2.5"
+            "border text-sm rounded-lg block w-full p-2.5"
           )}
         >
           {enumEntries.map(([key, value]) => (
@@ -291,6 +335,7 @@ const EntityFormFkInput = <
   initialValue: any;
 }) => {
   const fieldMetadata = params.service.metadata.fields[params.fieldKey];
+  const singular = fieldMetadata.label;
   const [searchParams, setSearchParams] =
     useState<SearchParams>(defaultSearchParams);
   const [pickerEntityId, setPickerEntityId] = useState<number | undefined>(params.fieldValue);
@@ -307,9 +352,9 @@ const EntityFormFkInput = <
     <div className="flex flex-col gap-2">
       <Modal
         opened={edit}
-        heading={`Pick a(n) ${params.service.metadata.singular}`}
+        heading={`Pick ${singular}`}
         close={() => setEdit(false)}
-        className="flex flex-col items-center justify-center"
+        className="p-0"
       >
         <EntityTable
           service={EntityServiceRegistry[fieldMetadata.apiPrefix!] as any}

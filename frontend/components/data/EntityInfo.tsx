@@ -1,13 +1,13 @@
 import { Fragment, useState } from "react";
-import { defaultSearchParams, type SearchParams } from "../../types/Search";
 import type { z } from "zod";
 import { EntityForm } from "./EntityForm";
 import { EntityTable } from "./EntityTable";
 import { useRouter } from "next/router";
 import { Entity } from "@/data/Entity";
-import EntityService from "@/services/EntityService";
 import ButtonText from "../ButtonText";
-import { EntityServiceRegistry } from "@/data/entityServiceRegistry";
+import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
+import EntityService from "@/data/EntityService";
+import { defaultSearchParams, SearchParams } from "@/data/Search";
 
 export const EntityInfo = <
   T extends Entity,
@@ -34,7 +34,7 @@ export const EntityInfo = <
   });
 
   return (
-    <div className="flex flex-col md:flex-row flex-wrap">
+    <div className="w-full flex flex-col md:flex-row flex-wrap">
       <div className="flex flex-col justify-start items-center border-b md:border-b-0 md:border-r">
         {isPending || data === undefined ? (
           loadingElement

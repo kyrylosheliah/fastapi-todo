@@ -13,18 +13,20 @@ export default function StatusesPage() {
 
   const search = searchParams as unknown as SearchParams;
 
-  return (<div>
-    <h1 className="text-2xl mb-2">Statuses</h1>
-    <EntityTable
-      traverse
-      edit
-      service={StatusService}
-      searchParams={{
-        value: search,
-        set: (nextSearch: SearchParams) => {
-          router.replace(pathname + "?" + toSearchParamsString(nextSearch))
-        },
-      }}
-    />
-  </div>);
+  return (
+    <div className="max-w-5xl">
+      <h1 className="text-2xl mb-2">Statuses</h1>
+      <EntityTable
+        traverse
+        edit
+        service={StatusService}
+        searchParams={{
+          value: search,
+          set: (nextSearch: SearchParams) => {
+            router.replace(pathname + "?" + toSearchParamsString(nextSearch));
+          },
+        }}
+      />
+    </div>
+  );
 }

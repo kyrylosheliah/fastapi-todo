@@ -281,6 +281,7 @@ export default function Home() {
                                 </div>
                               </div>
                               <div className="text-xs text-foreground/70">{t.description}</div>
+                              <div className="text-xs text-foreground/50">{t.due_date ? new Date(t.due_date).toLocaleString() : ""}</div>
                               <div className="mt-2 flex justify-end">
                                 <Button size="sm" variant="outline" onClick={() => setEditTask(t)}>Edit</Button>
                               </div>

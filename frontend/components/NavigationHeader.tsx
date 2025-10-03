@@ -24,7 +24,7 @@ export function NavigationHeader() {
   const { setTheme } = useTheme();
   
   return (
-    <header className="shadow-sm border-b border-gray-800">
+    <header className="shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
@@ -82,7 +82,7 @@ export function NavigationHeader() {
           </div>
         </div>
         {isMobileMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-gray-600 pt-4">
+          <div className="md:hidden pb-4 border-t pt-4">
             <nav className="space-y-2">
               {paths.slice(1).map((path) => (
                 <Link

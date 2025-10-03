@@ -27,7 +27,7 @@ export const Checkbox: React.FC<{
       className={cx(
         params.attributes?.className,
         "w-5 h-5 rounded-md! border flex items-center justify-center disabled:opacity-30",
-        params.indeterminate && "text-gray-400 accent-gray-400",
+        params.indeterminate && "text-gray-500 accent-gray-500",
       )}
     />
   );

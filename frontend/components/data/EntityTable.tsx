@@ -9,12 +9,14 @@ import { useRouter } from "next/router";
 import { Checkbox } from "@/components/Checkbox";
 import ButtonText from "@/components/ButtonText";
 import ButtonIcon from "@/components/ButtonIcon";
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SearchIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SearchIcon, SquareArrowUpRightIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Entity } from "@/data/Entity";
 import { entityDefaultValues } from "@/data/EntityMetadata";
 import { SearchParams, searchStatesToParameters, SearchSchema } from "@/data/Search";
 import EntityService from "@/data/EntityService";
+import { Input } from "@/components/ui/input";
+import { EntityModalForm } from "@/components/data/EntityModalForm";
 
 export function EntityTable<
   T extends Entity,
@@ -206,13 +208,13 @@ export function EntityTable<
       id: "open",
       header: "Info",
       cell: ({ row }) => (
-        <ButtonText
+        <ButtonIcon
           props={{
             onClick: () => router.push(`${metadata.indexPagePrefix}/${row.original.id}`),
           }}
         >
-          Open
-        </ButtonText>
+          <SquareArrowUpRightIcon size={32} />
+        </ButtonIcon>
       ),
     });
   }
@@ -245,7 +247,9 @@ export function EntityTable<
   const [createOpened, setCreateOpened] = useState(false);
   const createMutation = service.useCreate();
 
-  const deleteMuatation = service.useDelete();
+  const deleteMuatation = service.useDelete(() => {
+    setUpdateOpened(false);
+  });
 
   return (
     <div
@@ -255,10 +259,10 @@ export function EntityTable<
       )}
     >
       <div className="w-full h-8 gap-2 flex flex-row justify-between items-center">
-        <ButtonIcon className="w-8 h-8" props={{ disabled: true }}>
+        {/* <ButtonIcon className="w-8 h-8" props={{ disabled: true }}>
           <SearchIcon />
-        </ButtonIcon>
-        <input
+        </ButtonIcon> */}
+        <Input
           type="text"
           placeholder="Search..."
           value={globalFilter}
@@ -299,6 +303,7 @@ export function EntityTable<
               update={(id, newValues) =>
                 updateMutation.mutateAsync({ id, data: newValues })
               }
+              delete={() => deleteMuatation.mutateAsync(selectedRowId)}
               entityId={selectedRowId}
               service={service}
             />
@@ -328,7 +333,7 @@ export function EntityTable<
       ) : entities.length > 0 ? (
         <div className="w-full max-w-full overflow-x-auto">
           <table className="table-auto min-w-max w-full border">
-            <thead className="bg-gray-100">
+            <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -359,7 +364,7 @@ export function EntityTable<
                 <tr
                   key={row.id}
                   className={
-                    row.getIsSelected() ? "bg-blue-100" : "hover:bg-gray-100"
+                    row.getIsSelected() ? "bg-blue-100 dark:bg-gray-700" : "hover:bg-gray-200 dark:hover:bg-gray-800"
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -404,54 +409,3 @@ export function EntityTable<
     </div>
   );
 }
-
-const EntityModalForm = <
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, "id">>,
->(params: {
-  opened: boolean;
-  icon?: ReactNode;
-  heading: ReactNode;
-  close: () => void;
-  update?: (id: number, newValues: Omit<T, 'id'>) => Promise<boolean>;
-  create?: (newValues: Omit<T, 'id'>) => Promise<boolean>;
-  entityId: number | undefined;
-  service: EntityService<T, TSchema>;
-}) => {
-  const { data, isPending, isSuccess } = params.service.useGet(
-    params.entityId || 0
-  );
-  return (
-    <Modal
-      opened={params.opened}
-      icon={params.icon}
-      heading={params.heading}
-      close={params.close}
-      className="flex flex-col items-center justify-center"
-    >
-      {params.create === undefined ? (
-        isPending ? (
-          <div>Loading ...</div>
-        ) : isSuccess ? (
-          <EntityForm
-            edit
-            service={params.service}
-            entity={data as T}
-            onSubmit={(newFields: Omit<T, "id">) =>
-              params.update!(params.entityId!, newFields)
-            }
-          />
-        ) : (
-          <div>Error</div>
-        )
-      ) : (
-        <EntityForm
-          edit
-          service={params.service}
-          entity={entityDefaultValues(params.service.metadata.fields)}
-          onSubmit={(newFields: Omit<T, "id">) => params.create!(newFields)}
-        />
-      )}
-    </Modal>
-  );
-};

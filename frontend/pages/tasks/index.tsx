@@ -13,18 +13,20 @@ export default function TasksPage() {
 
   const search = searchParams as unknown as SearchParams;
 
-  return (<div>
-    <h1 className="text-2xl mb-2">Tasks</h1>
-    <EntityTable
-      traverse
-      edit
-      service={TaskService}
-      searchParams={{
-        value: search,
-        set: (nextSearch: SearchParams) => {
-          router.replace(pathname + "?" + toSearchParamsString(nextSearch))
-        },
-      }}
-    />
-  </div>);
+  return (
+    <div className="max-w-5xl">
+      <h1 className="text-2xl mb-2">Tasks</h1>
+      <EntityTable
+        traverse
+        edit
+        service={TaskService}
+        searchParams={{
+          value: search,
+          set: (nextSearch: SearchParams) => {
+            router.replace(pathname + "?" + toSearchParamsString(nextSearch));
+          },
+        }}
+      />
+    </div>
+  );
 }

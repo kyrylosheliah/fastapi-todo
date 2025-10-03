@@ -3,10 +3,12 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { EntityFormField } from "./EntityFormField";
-import ButtonText from "../ButtonText";
 import { type FieldValues } from "react-hook-form";
 import { Entity } from "@/data/Entity";
 import EntityService from "@/data/EntityService";
+import { Button } from "@/components/ui/button";
+import ButtonIcon from "@/components/ButtonIcon";
+import { Trash2Icon } from "lucide-react";
 
 export const EntityForm = <
   T extends Entity,
@@ -14,6 +16,7 @@ export const EntityForm = <
 >(params: {
   edit?: boolean;
   onSubmit: (newFields: Omit<T, 'id'>) => void;
+  delete?: () => Promise<boolean>;
   entity: T;
   service: EntityService<T, TSchema>;
   breakPopover?: boolean;
@@ -36,9 +39,10 @@ export const EntityForm = <
   const RootTag = params.edit ? "form" : "div";
 
   const onSubmit = params.edit
-    ? form.handleSubmit(((newFields: any) => // TODO: typescript
-        params.onSubmit(newFields)
-      ))
+    ? form.handleSubmit(
+        (newFields: any) => params.onSubmit(newFields), // TODO: typescript
+        (m: any) => alert(`Invalid form ${JSON.stringify(m)}`)
+      )
     : undefined;
 
   return (
@@ -58,22 +62,26 @@ export const EntityForm = <
       ))}
       {params.edit && (
         <div className="flex flex-row justify-between items-center">
-          <ButtonText
-            props={{
-              onClick: () => form.reset(),
-              className: "self-end",
-            }}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => form.reset()}
+            className="self-end"
           >
             Reset
-          </ButtonText>
-          <ButtonText
-            props={{
-              type: "submit",
-              className: "self-end",
-            }}
-          >
+          </Button>
+          {params.delete && (
+            <ButtonIcon
+              type="danger"
+              children={<Trash2Icon size={16} />}
+              props={{
+                onClick: params.delete,
+              }}
+            />
+          )}
+          <Button type="button" onClick={onSubmit} className="self-end">
             Apply
-          </ButtonText>
+          </Button>
         </div>
       )}
     </RootTag>

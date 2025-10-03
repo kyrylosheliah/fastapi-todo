@@ -36,6 +36,14 @@ export default class EntityService<
       });
   }
 
+  async getAll(): Promise<T[] | undefined> {
+    return emitHttp("GET", `${this.metadata.apiPrefix}/all`)
+      .then((res) => res.json())
+      .catch((reason) => {
+        alert(`Failed to load ${this.metadata.singular} entities, ${reason}`);
+      });
+  }
+
   async create(data: Omit<T, 'id'>): Promise<boolean> {
     return emitHttpJson("POST", this.metadata.apiPrefix, data)
       .then((_) => true)
@@ -47,20 +55,23 @@ export default class EntityService<
 
   async update(id: string | number, data: Omit<T, 'id'>): Promise<boolean> {
     return emitHttpJson("put", `${this.metadata.apiPrefix}/${id}`, data)
-      .then((_) => true)
+      .then((res) => res.status == 200 || res.status == 201)
       .catch((reason) => {
         alert(`Failed to update ${this.metadata.singular} ${id}, ${reason}`);
         return false;
       });
   }
 
-  async delete(entityId: string | number): Promise<void> {
-    if (!confirm("Are you sure you want to delete this project?")) return;
-    emitHttpJson("DELETE", `${this.metadata.apiPrefix}/${entityId}`).catch(
-      (reason) => {
+  async delete(entityId: string | number): Promise<boolean> {
+    if (!confirm(`Are you sure you want to delete [${this.metadata.singular}.id:${entityId}]?`)){
+      return Promise.reject({ cancelled: true });
+    }
+    return emitHttpJson("DELETE", `${this.metadata.apiPrefix}/${entityId}`)
+      .then((res) => res.status == 200 || res.status == 204)
+      .catch((reason) => {
         alert(`Failed to delete the ${this.metadata.singular}, ${reason}`);
-      }
-    );
+        return false;
+      });
   }
 
   useSearch(searchParams: SearchParams) {
@@ -76,6 +87,14 @@ export default class EntityService<
       queryKey: [this.metadata.apiPrefix, "get", entityId],
       queryFn: () => this.get(entityId),
       enabled: !!entityId,
+    });
+  }
+
+  useGetAll() {
+    return useQuery({
+      queryKey: [this.metadata.apiPrefix, "get", "all"],
+      queryFn: () => this.getAll(),
+      enabled: true,
     });
   }
 

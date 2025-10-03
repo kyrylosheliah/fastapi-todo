@@ -18,9 +18,6 @@ class BaseCrudService(Generic[T]):
         db: Session,
         req: EntitySearchDto,
     ) -> Dict[str, Any]:
-        """
-        Complex search similar to TypeORM QueryBuilder.
-        """
         query = db.query(self.model)
         searchable_fields = get_searchable_columns(self.model)
 
@@ -73,7 +70,10 @@ class BaseCrudService(Generic[T]):
         page_modulo = total_count % req.pageSize
         page_count = (total_count - page_modulo) // req.pageSize + (0 if page_modulo == 0 else 1)
 
-        return {"pageCount": page_count, "items": items}
+        return {
+            "pageCount": page_count,
+            "items": items,
+        }
 
     def get_all(self, db: Session) -> List[T]:
         try:
@@ -109,6 +109,7 @@ class BaseCrudService(Generic[T]):
         try:
             for key, value in data.items():
                 setattr(entity, key, value)
+            setattr(entity, "id", 0)
             db.commit()
             db.refresh(entity)
             return entity
@@ -127,62 +128,3 @@ class BaseCrudService(Generic[T]):
         except Exception as e:
             db.rollback()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-    def search(self, db: Session, search_dto: EntitySearchDto) -> Dict[str, Any]:
-        query = db.query(self.model)
-        searchable_fields = get_searchable_columns(self.model)
-
-        # optional filtering
-        for column, criterion in req.criteria.items():
-            if not is_valid_column(self.model, column):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid criterion column name: {column}",
-                )
-            if criterion != "":
-                query = query.filter(getattr(self.model, column) == criterion)
-
-        # global filtering (search)
-        filter_value = req.globalFilter.strip()
-        if filter_value:
-            global_conditions = []
-            for idx, field in enumerate(searchable_fields):
-                key = field["key"]
-                ftype = field["type"]
-                col = getattr(self.model, key)
-
-                if ftype == "exact":
-                    global_conditions.append(col == filter_value)
-                elif ftype == "partial":
-                    global_conditions.append(col.ilike(f"%{filter_value}%"))
-                elif ftype == "prefix":
-                    global_conditions.append(col.ilike(f"{filter_value}%"))
-                elif ftype == "suffix":
-                    global_conditions.append(col.ilike(f"%{filter_value}"))
-            if global_conditions:
-                query = query.filter(or_(*global_conditions))
-
-
-        # ordering
-        if not is_valid_column(self.model, req.orderByColumn):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid orderByColumn: {req.orderByColumn}",
-            )
-
-        order_col = getattr(self.model, req.orderByColumn)
-        query = query.order_by(asc(order_col) if req.ascending else desc(order_col))
-
-        # pagination
-        to_skip = (req.pageNo - 1) * req.pageSize
-        to_take = req.pageSize
-        total_count = query.count()
-        items = query.offset(to_skip).limit(to_take).all()
-
-        page_modulo = total_count % req.pageSize
-        page_count = (total_count - page_modulo) // req.pageSize + (0 if page_modulo == 0 else 1)
-
-        return {
-            "pageCount": page_count,
-            "items": items,
-        }

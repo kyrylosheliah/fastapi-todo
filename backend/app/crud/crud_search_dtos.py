@@ -9,25 +9,3 @@ class EntitySearchDto(BaseModel):
     orderByColumn: str = Field("id", description="Column name to order by")
     criteria: Dict[str, str] = Field(default_factory=dict, description="Column-based filters")
     globalFilter: str = Field("", description="Global search text")
-
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field
-
-
-class SearchEntitiesDto(BaseModel):
-    filters: Optional[Dict[str, Any]] = Field(default=None, description="Search filters")
-    sort_by: Optional[str] = Field(default=None, description="Field to sort by")
-    sort_order: Optional[str] = Field(default='asc', description="Sort order: asc or desc")
-    limit: Optional[int] = Field(default=None, ge=1, description="Maximum number of results")
-    offset: Optional[int] = Field(default=None, ge=0, description="Number of results to skip")
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "filters": {"title": "Task", "status": "todo"},
-                "sort_by": "id",
-                "sort_order": "desc",
-                "limit": 10,
-                "offset": 0
-            }
-        }

@@ -49,8 +49,9 @@ export function TaskCard(params: {
                     onClick: params.edit,
                   }}
                   className="w-5 h-5"
-                  children={<SquarePen size={16} />}
-                />
+                >
+                  <SquarePen size={16} />
+                </ButtonIcon>
               )}
             </div>
           )}

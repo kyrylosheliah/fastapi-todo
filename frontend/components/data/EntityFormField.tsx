@@ -30,6 +30,16 @@ export const EntityFormField = <
   fieldKey: string & keyof T & Path<T>;
   breakPopover?: boolean;
 }) => {
+  const fieldValue = useWatch({
+    control: params.form.control,
+    name: [params.fieldKey],
+  });
+
+  const isDirty: boolean | undefined = useMemo(
+    () => (params.form.formState.dirtyFields as any)[params.fieldKey],
+    [params.form.formState.dirtyFields, fieldValue]
+  );
+
   const metadata = params.service.metadata;
 
   const errors = params.form.formState.errors;
@@ -41,16 +51,6 @@ export const EntityFormField = <
 
   const keyOrConst =
     fieldMetadata.constant === true || fieldMetadata.type === "key";
-
-  const fieldValue = useWatch({
-    control: params.form.control,
-    name: [params.fieldKey],
-  });
-
-  const isDirty: boolean | undefined = useMemo(
-    () => (params.form.formState.dirtyFields as any)[params.fieldKey],
-    [params.form.formState.dirtyFields, fieldValue]
-  );
 
   return (
     <div>

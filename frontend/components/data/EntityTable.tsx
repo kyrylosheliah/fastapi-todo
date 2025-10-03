@@ -166,10 +166,8 @@ export function EntityTable<
       : {}
   );
 
-  const [selectedRowId, setSelectedRowId] =
-    params.pickerState !== undefined
-      ? params.pickerState
-      : useState<number | undefined>(undefined);
+  const internalSelectedRowIdState = useState<number | undefined>();
+  const [selectedRowId, setSelectedRowId] = params.pickerState ? params.pickerState : internalSelectedRowIdState;
 
   useEffect(() => {
     const selectedRows = entities.filter((row) => rowSelection[row.id]);

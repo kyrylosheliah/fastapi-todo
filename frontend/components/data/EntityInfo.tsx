@@ -8,9 +8,37 @@ import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import EntityService from "@/data/EntityService";
 import { getDefaultSearchParams, SearchParams } from "@/data/Search";
 
-export const EntityInfo = <
-  T extends Entity,
->(params: {
+const RelatedTable = <T extends Entity>(params: {
+  relation: {
+    label: string;
+    apiPrefix: "/task" | "/status" | "/category";
+    fkField: string;
+  };
+  entityId: string;
+  service: EntityService<T>;
+}) => {
+  const [searchParams, setSearchParams] = useState<SearchParams>(
+    getDefaultSearchParams()
+  );
+  return (
+    <Fragment key={`relation_${params.relation.apiPrefix}`}>
+      <h2 className="mb-4 text-xl fw-600">{params.relation.label}</h2>
+      <EntityTable
+        traverse
+        key={`relation_${params.relation.label}`}
+        searchParams={{ value: searchParams, set: setSearchParams }}
+        service={params.service}
+        relationFilter={{
+          key: params.relation.fkField,
+          value: params.entityId,
+        }}
+        edit
+      />
+    </Fragment>
+  );
+};
+
+export const EntityInfo = <T extends Entity>(params: {
   entityId: string;
   service: EntityService<T>;
 }) => {
@@ -98,26 +126,14 @@ export const EntityInfo = <
       </div>
       <div className="pl-4 pt-4 w-full flex-1 min-w-0">
         {metadata.relations && metadata.relations.length ? (
-          metadata.relations.map((relation) => {
-            const [searchParams, setSearchParams] =
-              useState<SearchParams>(getDefaultSearchParams());
-            return (
-              <Fragment key={`relation_${relation.apiPrefix}`}>
-                <h2 className="mb-4 text-xl fw-600">{relation.label}</h2>
-                <EntityTable
-                  traverse
-                  key={`relation_${relation.label}`}
-                  searchParams={{ value: searchParams, set: setSearchParams }}
-                  service={EntityServiceRegistry[relation.apiPrefix] as any}
-                  relationFilter={{
-                    key: relation.fkField,
-                    value: params.entityId,
-                  }}
-                  edit
-                />
-              </Fragment>
-            );
-          })
+          metadata.relations.map((r) => (
+            <RelatedTable
+              key={"relation__" + r.apiPrefix}
+              entityId={params.entityId}
+              relation={r}
+              service={EntityServiceRegistry[r.apiPrefix] as any}
+            />
+          ))
         ) : (
           <>
             <h2 className="mb-4 text-xl fw-600">No references</h2>

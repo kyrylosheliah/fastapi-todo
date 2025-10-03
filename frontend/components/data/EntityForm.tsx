@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button";
 import ButtonIcon from "@/components/ButtonIcon";
 import { Trash2Icon } from "lucide-react";
 
-export const EntityForm = <
-  T extends Entity,
->(params: {
+export const EntityForm = <T extends Entity>(params: {
   edit?: boolean;
   onSubmit: (newFields: T) => void;
   delete?: () => Promise<boolean>;
@@ -31,7 +29,7 @@ export const EntityForm = <
     if (params.entity) {
       form.reset(defaultFormFields);
     }
-  }, [params.entity, form]);
+  }, [params.entity, form, defaultFormFields]);
 
   const RootTag = params.edit ? "form" : "div";
 

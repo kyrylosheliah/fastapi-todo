@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { emptyTask, fetchAllTaskData } from "@/data/Task/TaskHooks";
+import { emptyTask } from "@/data/Task/TaskHooks";
 import { ITask } from "@/data/Task/ITask";
 import { IStatus } from "@/data/Status/IStatus";
 import { ICategory } from "@/data/Category/ICategory";
@@ -13,6 +13,7 @@ import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import { CategoryService } from "@/data/Category/CategoryService";
 import { StatusService } from "@/data/Status/StatusService";
 import { TaskService } from "@/data/Task/TaskService";
+import { ArrowDownAZIcon, ArrowUpAZIcon } from "lucide-react";
 
 export default function SearchPage(){
   const [query, setQuery] = useState("");
@@ -27,6 +28,7 @@ export default function SearchPage(){
   const service = EntityServiceRegistry["/task"];
   const metadata = service.metadata;
   const updateMutation = service.useUpdate();
+  const silentUpdateMutation = service.useUpdate(undefined, true);
   const createMutation = service.useCreate(() => {
     setNewOpen(false);
   });
@@ -45,10 +47,17 @@ export default function SearchPage(){
 
   const [inProgressId, setInProgressId] = useState<number | undefined>(undefined);
   const [doneId, setDoneId] = useState<number | undefined>(undefined);
-  const [binaryStatusesPresent, setBinaryStatusesPresent] = useState<boolean>(true);
+  const [binaryStatusesPresent, setBinaryStatusesPresent] = useState<boolean>(false);
 
   useEffect(() => {
-    setStatuses(statusesQuery || []);
+    const newStatuses = statusesQuery || []
+    setStatuses(newStatuses);
+    const newInProgressId = newStatuses.find(s => s.name === "In Progress")?.id;
+    setInProgressId(newInProgressId);
+    const newDoneId = newStatuses.find(s => s.name === "Done")?.id;
+    setDoneId(newDoneId);
+    const newBinaryStatusesPresent = (newDoneId !== undefined) && (newInProgressId !== undefined);
+    setBinaryStatusesPresent(newBinaryStatusesPresent);
   }, [statusesQuery, isStatusesQueryPending]);
   useEffect(() => {
     setCategories(categoriesQuery || []);
@@ -56,12 +65,6 @@ export default function SearchPage(){
   useEffect(() => {
     setTasks(tasksQuery || []);
   }, [tasksQuery, isTasksQueryPending]);
-
-  useEffect(() => {
-    setInProgressId(statuses.find(s => s.name === "In Progress")?.id);
-    setDoneId(statuses.find(s => s.name === "Done")?.id);
-    setBinaryStatusesPresent(doneId !== undefined && inProgressId !== undefined);
-  }, [statuses]);
 
   const filtered = useMemo(()=>{
     const q = query.trim().toLowerCase();
@@ -80,7 +83,9 @@ export default function SearchPage(){
   async function toggleCompletion(task: ITask) {
     if (!binaryStatusesPresent) return;
     task.status_id = task.status_id === doneId! ? inProgressId! : doneId!;
-    await updateMutation.mutateAsync({ id: task.id, data: task });
+    await silentUpdateMutation.mutateAsync({ id: task.id, data: task });
+    // trigger filtering
+    setSortOrder(sortOrder);
   }
 
   return (
@@ -130,12 +135,12 @@ export default function SearchPage(){
           </SelectContent>
         </Select>
         <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as any)}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger>
             <SelectValue placeholder="Direction" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="asc">Ascending</SelectItem>
-            <SelectItem value="desc">Descending</SelectItem>
+            <SelectItem value="asc"><ArrowDownAZIcon /> Asc</SelectItem>
+            <SelectItem value="desc"><ArrowUpAZIcon /> Desc</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -144,16 +149,17 @@ export default function SearchPage(){
         {filtered.map((t) => (
           <TaskCard
             key={"task__" + t.id}
-            canCheck={binaryStatusesPresent}
-            doneId={(binaryStatusesPresent && doneId) || 0}
+            doneId={doneId}
             onCheckedChange={() => toggleCompletion(t)}
             task={t}
             category={categories.find((c) => c.id === t.category_id)?.name}
+            status={statuses.find((s) => s.id === t.status_id)?.name}
             delete={() => deleteMutation.mutateAsync(editTask?.id)}
             edit={() => {
               setEditTask(t);
               setEditOpen(true);
             }}
+            className="max-w-3xl"
           />
         ))}
       </div>

@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { ReactNode } from "react";
 import { Entity } from "./Entity";
-import { EntityServiceRegistry } from "@/services/EntityServiceRegistry";
+import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 
 export type EntityMetadata<
   T extends Entity,

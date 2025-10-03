@@ -109,7 +109,7 @@ class BaseCrudService(Generic[T]):
         try:
             for key, value in data.items():
                 setattr(entity, key, value)
-            setattr(entity, "id", 0)
+            setattr(entity, "id", entity_id)
             db.commit()
             db.refresh(entity)
             return entity

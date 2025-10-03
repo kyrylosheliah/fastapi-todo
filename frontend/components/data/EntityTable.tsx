@@ -3,16 +3,11 @@ import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type Pagina
 import type { z } from "zod";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
-import type { ReactNode } from "react";
-import { EntityForm } from "./EntityForm";
 import { useRouter } from "next/router";
 import { Checkbox } from "@/components/Checkbox";
-import ButtonText from "@/components/ButtonText";
 import ButtonIcon from "@/components/ButtonIcon";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SearchIcon, SquareArrowUpRightIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
-import { Modal } from "@/components/Modal";
 import { Entity } from "@/data/Entity";
-import { entityDefaultValues } from "@/data/EntityMetadata";
 import { SearchParams, searchStatesToParameters, SearchSchema } from "@/data/Search";
 import EntityService from "@/data/EntityService";
 import { Input } from "@/components/ui/input";

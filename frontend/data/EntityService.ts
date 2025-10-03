@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import { emitHttp, emitHttpJson } from "../utils/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Entity } from "@/data/Entity";
 import { EntityMetadata } from "@/data/EntityMetadata";
 import { SearchParams, SearchResponse } from "@/data/Search";
@@ -15,6 +15,18 @@ export default class EntityService<
     const temp: any = { ...entity };
     delete temp.id;
     return temp as Omit<T, 'id'>;
+  }
+
+  async invalidateAllLists(queryClient: QueryClient) {
+    queryClient.invalidateQueries({
+      queryKey: [this.metadata.apiPrefix, "search"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: [this.metadata.apiPrefix, "get"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: [this.metadata.apiPrefix, "getAll"],
+    });
   }
 
   async search(search: SearchParams): Promise<SearchResponse<T>> {
@@ -46,7 +58,7 @@ export default class EntityService<
 
   async create(data: Omit<T, 'id'>): Promise<boolean> {
     return emitHttpJson("POST", this.metadata.apiPrefix, data)
-      .then((_) => true)
+      .then((res) => res.status === 200 || res.status === 201)
       .catch((reason) => {
         alert(`Failed to create a ${this.metadata.singular}, ${reason}`);
         return false;
@@ -55,7 +67,7 @@ export default class EntityService<
 
   async update(id: string | number, data: Omit<T, 'id'>): Promise<boolean> {
     return emitHttpJson("put", `${this.metadata.apiPrefix}/${id}`, data)
-      .then((res) => res.status == 200 || res.status == 201)
+      .then((res) => res.status === 200 || res.status === 201)
       .catch((reason) => {
         alert(`Failed to update ${this.metadata.singular} ${id}, ${reason}`);
         return false;
@@ -67,7 +79,7 @@ export default class EntityService<
       return Promise.reject({ cancelled: true });
     }
     return emitHttpJson("DELETE", `${this.metadata.apiPrefix}/${entityId}`)
-      .then((res) => res.status == 200 || res.status == 204)
+      .then((res) => res.status === 200 || res.status === 204)
       .catch((reason) => {
         alert(`Failed to delete the ${this.metadata.singular}, ${reason}`);
         return false;
@@ -101,30 +113,42 @@ export default class EntityService<
   useCreate(onSuccess?: () => void) {
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (data: Omit<T, 'id'>) => this.create(data),
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: [this.metadata.apiPrefix, "search"],
-        });
+      mutationFn: (data: Omit<T, "id">) => this.create(data),
+      onSuccess: async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "search"],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "get", "all"],
+          }),
+        ]);
         alert(`A ${this.metadata.singular} was successfully created`);
         onSuccess?.();
       },
     });
   }
 
-  useUpdate(onSuccess?: () => void) {
+  useUpdate(onSuccess?: () => void, silent?: boolean) {
     const queryClient = useQueryClient();
     return useMutation({
       mutationFn: (params: { id: string | number; data: Omit<T, 'id'> }) =>
         this.update(params.id, params.data),
-      onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({
-          queryKey: [this.metadata.apiPrefix, "search"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: [this.metadata.apiPrefix, "get", variables.id],
-        });
-        alert(`The ${this.metadata.singular} was successfully updated`);
+      onSuccess: async (_, variables) => {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "search"],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "get", variables],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "get", "all"],
+          }),
+        ]);
+        if (!silent) {
+          alert(`The ${this.metadata.singular} was successfully updated`);
+        }
         onSuccess?.();
       },
     });
@@ -133,15 +157,19 @@ export default class EntityService<
   useDelete(onSuccess?: () => void) {
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (id: string | number) =>
-        this.delete(id),
-      onSuccess: (_, variables) => {
-        queryClient.invalidateQueries({
-          queryKey: [this.metadata.apiPrefix, "search"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: [this.metadata.apiPrefix, "get", variables],
-        });
+      mutationFn: (id: string | number) => this.delete(id),
+      onSuccess: async (_, variables) => {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "search"],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "get", variables],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [this.metadata.apiPrefix, "get", "all"],
+          }),
+        ]);
         alert(`The ${this.metadata.singular} was successfully deleted`);
         onSuccess?.();
       },

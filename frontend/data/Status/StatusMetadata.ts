@@ -13,7 +13,7 @@ export const StatusMetadata: EntityMetadata<
   plural: "statuses",
   fields: {
     id: { label: "Id", type: "key", constant: true },
-    name: { label: "Title", type: "text" },
+    name: { label: "Name", type: "text" },
     order: { label: "Order", type: "number", nullable: true },
   },
   relations: [

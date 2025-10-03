@@ -13,10 +13,11 @@ const defaultSearchString = getDefaultSearchParamsString();
 
 const paths = [
   { label: "Home", href: "/" },
+  { label: "Search", href: "/" },
   { label: "Tasks", href: "/tasks?" + defaultSearchString },
   { label: "Statuses", href: "/statuses?" + defaultSearchString },
   { label: "Categories", href: "/categories?" + defaultSearchString },
-  { label: "Kanban", href: "/kanban" },
+  // { label: "Kanban", href: "/kanban" },
 ];
 
 export function NavigationHeader() {

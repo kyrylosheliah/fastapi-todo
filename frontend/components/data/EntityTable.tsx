@@ -33,19 +33,7 @@ export function EntityTable<
   const metadata = params.service.metadata;
   const service = params.service;
 
-  // const sourceParametersParsing = SearchDTO.safeParse(params.searchParams.value);
-  // const sourceParameters = sourceParametersParsing.success ? sourceParametersParsing.data : getDefaultSearchParams();
-
   const {
-    // entities,
-    // pageCount,
-    // pagination,
-    // optimisticSorting,
-    // globalFilter,
-    // handlePaginationChange,
-    // handleSortingChange,
-    // setGlobalFilter,
-    // isPending,
     data,
     isPending,
     entities,
@@ -61,100 +49,6 @@ export function EntityTable<
     searchParams: params.searchParams,
     relationFilter: params.relationFilter,
   });
-
-  // const pagination: PaginationState = useMemo(() => ({
-  //   pageIndex: sourceParameters.pageNo - 1,
-  //   pageSize: sourceParameters.pageSize,
-  // }), [sourceParameters.pageNo, sourceParameters.pageSize]);
-
-  // const [optimisticSorting, setOptimisticSorting] = useState<SortingState>(() => [{
-  //   id: sourceParameters.orderByColumn,
-  //   desc: !sourceParameters.ascending,
-  // }]);
-
-  // useEffect(() => {
-  //   const newSorting = [
-  //     {
-  //       id: sourceParameters.orderByColumn,
-  //       desc: !sourceParameters.ascending,
-  //     },
-  //   ];
-  //   setOptimisticSorting(newSorting);
-  // }, [sourceParameters.orderByColumn, sourceParameters.ascending]);
-
-  // const sorting: SortingState = useMemo(
-  //   () => [
-  //     {
-  //       id: sourceParameters.orderByColumn,
-  //       desc: !sourceParameters.ascending,
-  //     },
-  //   ],
-  //   [sourceParameters.pageNo, sourceParameters.ascending]
-  // );
-
-  // const [globalFilter, setGlobalFilter] = useState<string>("");
-
-  // const searchParams: SearchParams = useMemo(() => {
-  //   let nextSearch = searchStatesToParameters({
-  //     pagination,
-  //     sorting,
-  //     globalFilter,
-  //   });
-  //   if (params.relationFilter) {
-  //     nextSearch.criteria[params.relationFilter.key] =
-  //       params.relationFilter.value;
-  //   }
-  //   const result = SearchDTO.safeParse(nextSearch);
-  //   if (!result.success) {
-  //     console.log(result.error);
-  //     console.log(nextSearch);
-  //     // window.alert(`Invalid search parameters, ${result.error.format()}`);
-  //     return getDefaultSearchParams();
-  //   }
-  //   return nextSearch;
-  // }, [
-  //   pagination,
-  //   sorting,
-  //   globalFilter,
-  //   params.relationFilter,
-  //   sourceParameters,
-  // ]);
-
-  // const handlePaginationChange = useCallback(
-  //   (updater: any) => {
-  //     const newPagination =
-  //       typeof updater === "function" ? updater(pagination) : updater;
-  //     const nextSearch = {
-  //       ...searchParams,
-  //       pageNo: newPagination.pageIndex + 1,
-  //       pageSize: newPagination.pageSize,
-  //     };
-  //     params.searchParams.set(nextSearch);
-  //   },
-  //   [params.searchParams.value, pagination, sourceParameters]
-  // );
-
-  // const handleSortingChange = useCallback(
-  //   (updater: any) => {
-  //     const newSorting: SortingState =
-  //       typeof updater === "function" ? updater(sorting) : updater;
-  //     setOptimisticSorting(newSorting);
-  //     const sortingColumn = newSorting[0]?.id || searchParams.orderByColumn;
-  //     const nextSearch = {
-  //       ...searchParams,
-  //       orderByColumn: sortingColumn,
-  //       ascending: !newSorting[0]?.desc,
-  //       criteria: { [sortingColumn]: globalFilter },
-  //     };
-  //     params.searchParams.set(nextSearch);
-  //   },
-  //   [params.searchParams.value, optimisticSorting, pagination, sourceParameters]
-  // );
-
-  // const { data, isPending } = service.useSearch(searchParams);
-
-  // const entities = data !== undefined ? data.items || [] : [];
-  // const pageCount = data !== undefined ? data.pageCount : 0;
 
   const router = useRouter();
 

@@ -17,7 +17,7 @@ const paths = [
   { label: "Tasks", href: "/tasks?" + defaultSearchString },
   { label: "Statuses", href: "/statuses?" + defaultSearchString },
   { label: "Categories", href: "/categories?" + defaultSearchString },
-  { label: "Kanban", href: "/kanban" },
+  // { label: "Kanban", href: "/kanban" },
 ];
 
 export function NavigationHeader() {

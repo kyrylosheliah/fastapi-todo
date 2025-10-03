@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
 import { type FieldValues, type UseFormReturn, type Path, useWatch, get, PathValue } from "react-hook-form";
-import type { z } from "zod";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import { EntityTable } from "./EntityTable";

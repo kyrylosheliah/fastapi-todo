@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { FieldErrors, FieldValues, useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
 import { EntityFormField } from "./EntityFormField";
 import { Entity } from "@/data/Entity";
 import EntityService from "@/data/EntityService";

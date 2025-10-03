@@ -125,7 +125,7 @@ export default function SearchPage(){
       </div>
 
       <div className="flex items-center gap-4">
-        <Select value={sortKey} onValueChange={(v) => setSortKey(v as any)}>
+        <Select value={sortKey} onValueChange={(v) => setSortKey(v as "priority" | "created_at")}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -134,7 +134,7 @@ export default function SearchPage(){
             <SelectItem value="created_at">Created</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as any)}>
+        <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as "asc" | "desc")}>
           <SelectTrigger>
             <SelectValue placeholder="Direction" />
           </SelectTrigger>
@@ -154,7 +154,7 @@ export default function SearchPage(){
             task={t}
             category={categories.find((c) => c.id === t.category_id)?.name}
             status={statuses.find((s) => s.id === t.status_id)?.name}
-            delete={() => deleteMutation.mutateAsync(editTask?.id)}
+            delete={() => deleteMutation.mutateAsync(t.id)}
             edit={() => {
               setEditTask(t);
               setEditOpen(true);
@@ -183,7 +183,7 @@ export default function SearchPage(){
           updateMutation.mutateAsync({ id, data: newValues })
         }
         delete={() =>
-          deleteMutation.mutateAsync(editTask?.id)
+          deleteMutation.mutateAsync(editTask ? editTask.id : 0)
         }
         entityId={editTask?.id}
         service={service}

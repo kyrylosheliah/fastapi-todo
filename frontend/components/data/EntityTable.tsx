@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
-import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type PaginationState, type RowSelectionState, type SortingState } from "@tanstack/react-table";
+import { useEffect, useState, type JSX } from "react";
+import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type RowSelectionState } from "@tanstack/react-table";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import { useRouter } from "next/router";
@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/Checkbox";
 import ButtonIcon from "@/components/ButtonIcon";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SquareArrowUpRightIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
 import { Entity } from "@/data/Entity";
-import { SearchParams, searchStatesToParameters, SearchDTO, getDefaultSearchParams } from "@/data/Search";
+import { SearchParams } from "@/data/Search";
 import EntityService from "@/data/EntityService";
 import { Input } from "@/components/ui/input";
 import { EntityModalForm } from "@/components/data/EntityModalForm";

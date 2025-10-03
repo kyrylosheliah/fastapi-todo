@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import type { FieldValues, Path } from "react-hook-form";
 import { EntityForm } from "./EntityForm";
-import { CalendarIcon, CircleOffIcon, ClockIcon, LinkIcon, SquareArrowUpRightIcon } from "lucide-react";
+import { CalendarIcon, CircleOffIcon, SquareArrowUpRightIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ButtonIcon from "../ButtonIcon";
 import { Entity } from "@/data/Entity";

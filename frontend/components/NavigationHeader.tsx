@@ -17,7 +17,7 @@ const paths = [
   { label: "Tasks", href: "/tasks?" + defaultSearchString },
   { label: "Statuses", href: "/statuses?" + defaultSearchString },
   { label: "Categories", href: "/categories?" + defaultSearchString },
-  // { label: "Kanban", href: "/kanban" },
+  { label: "Kanban", href: "/kanban" },
 ];
 
 export function NavigationHeader() {
@@ -27,13 +27,13 @@ export function NavigationHeader() {
   return (
     <header className="shadow-sm">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="w-full grid grid-cols-2 md:grid-cols-3 items-center h-16">
           <div className="flex items-center space-x-4">
             <Breadcrumbs />
           </div>
 
           <NavigationMenu className="hidden md:block">
-            <NavigationMenuList className="flex items-center justify-between h-16">
+            <NavigationMenuList className="flex items-center justify-center h-16">
               {paths.slice(1).map((path) => (
                 <NavigationMenuItem key={path.href}>
                   <NavigationMenuLink
@@ -51,7 +51,7 @@ export function NavigationHeader() {
             </NavigationMenuList>
           </NavigationMenu>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-row items-center justify-end space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">

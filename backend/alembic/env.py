@@ -11,7 +11,7 @@ from alembic import context
 config = context.config
 
 # Interpret the config file for Python logging.
-fileConfig(config.config_file_name)
+# fileConfig(config.config_file_name)
 
 DATABASE_URL = os.getenv("DATABASE_URL") or "postgresql://postgres:postgres@localhost:5432/fastapi-todo"
 config.set_main_option("sqlalchemy.url", DATABASE_URL)

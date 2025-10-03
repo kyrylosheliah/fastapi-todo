@@ -1,3 +1,4 @@
+import os
 from alembic.config import Config
 from alembic import command
 from sqlmodel import Session, select
@@ -12,7 +13,10 @@ logger = logging.getLogger("uvicorn.error")
 #     Base.metadata.create_all(bind=engine)
 
 def run_migrations():
-    alembic_cfg = Config()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    alembic_ini_path = os.path.join(base_dir, "..", "alembic.ini")
+    alembic_cfg = Config(alembic_ini_path)
+    alembic_cfg.attributes["configure_logger"] = False
     alembic_cfg.set_main_option("script_location", "alembic")
     alembic_cfg.set_main_option("sqlalchemy.url", DATABASE_URL)
     try:

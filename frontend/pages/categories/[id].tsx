@@ -1,7 +1,11 @@
-import { EntityInfo } from '@/components/data/EntityInfo';
 import { CategoryService } from '@/data/Category/CategoryService';
-
 import { useRouter } from 'next/router';
+import dynamic from "next/dynamic";
+
+const EntityInfo = dynamic(() => import("@/components/data/EntityInfo").then(m => m.EntityInfo), {
+  loading: () => <p>Loading...</p>,
+  ssr: false,
+});
 
 export default function SpecificCategoryPage() {
   const router = useRouter();

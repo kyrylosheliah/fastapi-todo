@@ -4,19 +4,16 @@ import { EntityForm } from "./EntityForm";
 import { CalendarIcon, CircleOffIcon, SquareArrowUpRightIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ButtonIcon from "../ButtonIcon";
-import { Entity } from "@/data/Entity";
 import { EntityFieldMetadata } from "@/data/EntityMetadata";
 import EntityService from "@/data/EntityService";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { BadgeIcon } from "@/components/BadgeIcon";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 
-export const EntityFieldDisplay = <
-  T extends Entity
->(params: {
-  fieldKey: (keyof FieldValues) & (keyof T) & Path<FieldValues>;
+export const EntityFieldDisplay = (params: {
+  fieldKey: (keyof FieldValues) & Path<FieldValues>;
   fieldValue: any;
-  service: EntityService<T>;
+  service: EntityService;
   breakPopover?: boolean;
 }) => {
   const fieldMetadata = params.service.metadata.fields[params.fieldKey]

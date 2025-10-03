@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useState, useEffect } from "react";
 import { type FieldValues, type UseFormReturn, type Path, useWatch, get, PathValue } from "react-hook-form";
 import { cx } from "../../utils/cx";
@@ -10,7 +8,6 @@ import ButtonIcon from "../ButtonIcon";
 import { CalendarIcon, CheckIcon, CircleOffIcon, EditIcon, PlusIcon, XIcon } from "lucide-react";
 import { Checkbox } from "../Checkbox";
 import { Modal } from "../Modal";
-import { Entity } from "@/data/Entity";
 import { DatabaseType, fieldMetadataInitialValue } from "@/data/EntityMetadata";
 import { SearchParams, getDefaultSearchParams } from "@/data/Search";
 import EntityService from "@/data/EntityService";
@@ -23,13 +20,11 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 
-export const EntityFormField = <
-  T extends Entity
->(params: {
+export const EntityFormField = (params: {
   edit?: boolean;
-  service: EntityService<T>;
-  form: UseFormReturn<T>;
-  fieldKey: string & keyof T & Path<T>;
+  service: EntityService;
+  form: UseFormReturn<FieldValues>;
+  fieldKey: (keyof FieldValues) & Path<FieldValues>;
   breakPopover?: boolean;
 }) => {
   const fieldValue = useWatch({
@@ -103,7 +98,7 @@ export const EntityFormField = <
           breakPopover={params.breakPopover}
         />
       )}
-      {get(errors, params.fieldKey as Path<T>) && (
+      {get(errors, params.fieldKey) && (
         <p className="text-red-600 text-xs m-0">
           {errors[params.fieldKey]?.message?.toString()}
         </p>
@@ -141,13 +136,11 @@ const EntityFieldIcon = (params: {
   );
 };
 
-const EntityFieldControl = <
-  T extends Entity
->(params: {
-  fieldKey: string & (keyof T) & Path<T>;
+const EntityFieldControl = (params: {
+  fieldKey: (keyof FieldValues) & Path<FieldValues>;
   fieldValue: any;
-  form: UseFormReturn<T>;
-  service: EntityService<T>;
+  form: UseFormReturn<FieldValues>;
+  service: EntityService;
 }) => {
   const fieldValue = useWatch({
     control: params.form.control,
@@ -188,13 +181,11 @@ const EntityFieldControl = <
   );
 };
 
-const EntityFieldInput = <
-  T extends Entity
->(params: {
-  fieldKey: (keyof FieldValues) & (keyof T) & Path<T>;
+const EntityFieldInput = (params: {
+  fieldKey: (keyof FieldValues) & Path<FieldValues>;
   fieldValue: any;
-  form: UseFormReturn<T>;
-  service: EntityService<T>;
+  form: UseFormReturn<FieldValues>;
+  service: EntityService;
   initialValue: any;
 }) => {
   const errors = params.form.formState.errors;
@@ -256,7 +247,7 @@ const EntityFieldInput = <
               mode="single"
               selected={params.fieldValue && !isNaN(new Date(params.fieldValue).getTime())}
               onSelect={(v: Date | undefined) =>
-                params.form.setValue(params.fieldKey, (v ? v.toISOString() : "") as PathValue<T, typeof params.fieldKey>)
+                params.form.setValue(params.fieldKey, (v ? v.toISOString() : ""))
               }
             />
           </PopoverContent>
@@ -317,13 +308,11 @@ const EntityFieldInput = <
   }
 };
 
-const EntityFormFkInput = <
-  T extends Entity
->(params: {
-  fieldKey: (keyof FieldValues) & (keyof T) & Path<T>;
+const EntityFormFkInput = (params: {
+  fieldKey: (keyof FieldValues) & Path<FieldValues>;
   fieldValue: any;
-  form: UseFormReturn<T>;
-  service: EntityService<T>;
+  form: UseFormReturn<FieldValues>;
+  service: EntityService;
   commonClasses?: string;
   initialValue: any;
 }) => {

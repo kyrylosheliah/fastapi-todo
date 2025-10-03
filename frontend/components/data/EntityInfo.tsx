@@ -8,14 +8,14 @@ import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import EntityService from "@/data/EntityService";
 import { getDefaultSearchParams, SearchParams } from "@/data/Search";
 
-const RelatedTable = <T extends Entity>(params: {
+const RelatedTable = (params: {
   relation: {
     label: string;
     apiPrefix: "/task" | "/status" | "/category";
     fkField: string;
   };
   entityId: string;
-  service: EntityService<T>;
+  service: EntityService;
 }) => {
   const [searchParams, setSearchParams] = useState<SearchParams>(
     getDefaultSearchParams()
@@ -38,9 +38,9 @@ const RelatedTable = <T extends Entity>(params: {
   );
 };
 
-export const EntityInfo = <T extends Entity>(params: {
+export const EntityInfo = (params: {
   entityId: string;
-  service: EntityService<T>;
+  service: EntityService;
 }) => {
   const router = useRouter();
 

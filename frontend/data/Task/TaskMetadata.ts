@@ -1,9 +1,8 @@
 import { EntityMetadata } from "@/data/EntityMetadata";
 import { TaskBadge } from "./TaskBadge";
 import { TaskDTO } from "./TaskDTO";
-import { ITask } from "./ITask";
 
-export const TaskMetadata: EntityMetadata<ITask> = {
+export const TaskMetadata: EntityMetadata = {
   apiPrefix: "/task",
   indexPagePrefix: "/tasks",
   singular: "Task",

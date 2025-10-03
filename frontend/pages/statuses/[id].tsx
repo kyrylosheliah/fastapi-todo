@@ -1,7 +1,11 @@
-import { EntityInfo } from '@/components/data/EntityInfo';
 import { StatusService } from '@/data/Status/StatusService';
-
 import { useRouter } from 'next/router';
+import dynamic from "next/dynamic";
+
+const EntityInfo = dynamic(() => import("@/components/data/EntityInfo").then(m => m.EntityInfo), {
+  loading: () => <p>Loading...</p>,
+  ssr: false,
+});
 
 export default function SpecificStatusPage() {
   const router = useRouter();

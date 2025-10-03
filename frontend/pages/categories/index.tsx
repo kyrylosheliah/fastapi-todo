@@ -1,8 +1,13 @@
-import { EntityTable } from "@/components/data/EntityTable";
 import { SearchParams, toSearchParamsString } from "@/data/Search";
 import { CategoryService } from "@/data/Category/CategoryService";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
+
+const EntityTable = dynamic(() => import("@/components/data/EntityTable").then(m => m.EntityTable), {
+  loading: () => <p>Loading...</p>,
+  ssr: false,
+});
 
 export default function CategoriesPage() {
   const router = useRouter();

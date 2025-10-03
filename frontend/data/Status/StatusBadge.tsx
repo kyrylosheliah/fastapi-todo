@@ -1,8 +1,8 @@
 import { BadgeIcon } from "@/components/BadgeIcon";
-import { IStatus } from "./IStatus";
 import { ActivityIcon } from "lucide-react";
+import { FieldValues } from "react-hook-form";
 
-export const StatusBadge = (e: IStatus) => {
+export const StatusBadge = (e: FieldValues) => {
   return BadgeIcon({
     children: e.name,
     icon: (

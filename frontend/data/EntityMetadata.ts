@@ -2,24 +2,23 @@ import type { ReactNode } from "react";
 import { Entity } from "./Entity";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import z from "zod";
+import { FieldValues } from "react-hook-form";
 
-export type EntityMetadata<
-  T extends Entity,
-> = {
+export type EntityMetadata = {
   apiPrefix: string;
   indexPagePrefix: string;
   singular: string;
   plural: string;
   fields: {
-    [column in keyof T]: EntityFieldMetadata;
+    [column: string]: EntityFieldMetadata;
   };
   relations?: Array<{
     label: string;
     apiPrefix: keyof typeof EntityServiceRegistry;
     fkField: string;
   }>,
-  formSchema: z.ZodType<Omit<T, "id">>;
-  peekComponent: (entity: T) => ReactNode;
+  formSchema: z.ZodType<FieldValues>;
+  peekComponent: (entity: FieldValues) => ReactNode;
 };
 
 export type EntityFieldMetadata = {
@@ -79,12 +78,12 @@ export const fieldMetadataDefaultValue = (
   return fieldMetadataInitialValue(fieldMetadata);
 };
 
-export const entityDefaultValues = <T extends Entity>(fields: {
-  [column in keyof T]: EntityFieldMetadata;
+export const entityDefaultValues = (fields: {
+  [column in keyof FieldValues]: EntityFieldMetadata;
 }) => {
   let temp: any = {};
   Object.keys(fields).map((key) => {
-    temp[key] = fieldMetadataDefaultValue(fields[key as keyof T]);
+    temp[key] = fieldMetadataDefaultValue(fields[key as keyof FieldValues]);
   });
-  return temp as T;
+  return temp as FieldValues;
 };

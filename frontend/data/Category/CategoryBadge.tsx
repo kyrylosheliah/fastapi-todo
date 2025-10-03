@@ -1,8 +1,8 @@
 import { BadgeIcon } from "@/components/BadgeIcon";
-import { ICategory } from "./ICategory";
 import { ShapesIcon } from "lucide-react";
+import { FieldValues } from "react-hook-form";
 
-export const CategoryBadge = (e: ICategory) => {
+export const CategoryBadge = (e: FieldValues) => {
   return BadgeIcon({
     children: e.name,
     icon: (

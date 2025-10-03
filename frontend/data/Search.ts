@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getZodDefaults } from "../utils/getZodDefaults";
 import type { Entity } from "./Entity";
+import { FieldValues } from "react-hook-form";
 
 export const SearchDTO = z.object({
   pageNo: z.number().min(1).default(1),
@@ -38,9 +39,9 @@ export const toSearchParamsString = (searchParams_: SearchParams) => {
   return searchParams.toString();
 };
 
-export type SearchResponse<T extends Entity> = {
+export type SearchResponse = {
   pageCount: number;
-  items: T[],
+  items: FieldValues[],
 };
 
 export interface SearchState {

@@ -7,13 +7,21 @@ import { emptyTask } from "@/data/Task/TaskHooks";
 import { ITask } from "@/data/Task/ITask";
 import { IStatus } from "@/data/Status/IStatus";
 import { ICategory } from "@/data/Category/ICategory";
-import { TaskCard } from "@/components/todo/TaskCard";
-import { EntityModalForm } from "@/components/data/EntityModalForm";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import { CategoryService } from "@/data/Category/CategoryService";
 import { StatusService } from "@/data/Status/StatusService";
 import { TaskService } from "@/data/Task/TaskService";
 import { ArrowDownAZIcon, ArrowUpAZIcon } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const TaskCard = dynamic(() => import("@/components/todo/TaskCard").then(m => m.TaskCard), {
+  loading: () => <p>Loading...</p>,
+  ssr: false,
+});
+const EntityModalForm = dynamic(() => import("@/components/data/EntityModalForm").then(m => m.EntityModalForm), {
+  loading: () => <p>Loading...</p>,
+  ssr: false,
+});
 
 export default function SearchPage(){
   const [query, setQuery] = useState("");
@@ -51,7 +59,7 @@ export default function SearchPage(){
 
   useEffect(() => {
     const newStatuses = statusesQuery || []
-    setStatuses(newStatuses);
+    setStatuses(newStatuses as IStatus[]);
     const newInProgressId = newStatuses.find(s => s.name === "In Progress")?.id;
     setInProgressId(newInProgressId);
     const newDoneId = newStatuses.find(s => s.name === "Done")?.id;
@@ -60,10 +68,10 @@ export default function SearchPage(){
     setBinaryStatusesPresent(newBinaryStatusesPresent);
   }, [statusesQuery, isStatusesQueryPending]);
   useEffect(() => {
-    setCategories(categoriesQuery || []);
+    setCategories((categoriesQuery || []) as ICategory[]);
   }, [categoriesQuery, isCategoriesQueryPending]);
   useEffect(() => {
-    setTasks(tasksQuery || []);
+    setTasks((tasksQuery || []) as ITask[]);
   }, [tasksQuery, isTasksQueryPending]);
 
   const filtered = useMemo(()=>{

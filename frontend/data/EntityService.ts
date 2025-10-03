@@ -3,14 +3,12 @@ import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/re
 import { Entity } from "@/data/Entity";
 import { EntityMetadata } from "@/data/EntityMetadata";
 import { SearchParams, SearchResponse } from "@/data/Search";
-import { DefaultValues } from "react-hook-form";
+import { DefaultValues, FieldValues } from "react-hook-form";
 
-export default class EntityService<
-  T extends Entity,
-> {
-  constructor(readonly metadata: EntityMetadata<T>) {}
+export default class EntityService {
+  constructor(readonly metadata: EntityMetadata) {}
 
-  getFormFields(entity: T): DefaultValues<T> {
+  getFormFields(entity: FieldValues): DefaultValues<FieldValues> {
     const temp: any = { ...entity };
     delete temp.id;
     return temp;
@@ -28,7 +26,7 @@ export default class EntityService<
     });
   }
 
-  async search(search: SearchParams): Promise<SearchResponse<T>> {
+  async search(search: SearchParams): Promise<SearchResponse> {
     return emitHttpJson("POST", `${this.metadata.apiPrefix}/search`, search)
       .then((res) => res.json())
       .catch((reason) => {
@@ -37,7 +35,7 @@ export default class EntityService<
       });
   }
 
-  async get(entityId: string | number): Promise<T | undefined> {
+  async get(entityId: string | number): Promise<FieldValues | undefined> {
     return emitHttp("GET", `${this.metadata.apiPrefix}/${entityId}`)
       .then((res) => res.json())
       .catch((reason) => {
@@ -47,7 +45,7 @@ export default class EntityService<
       });
   }
 
-  async getAll(): Promise<T[] | undefined> {
+  async getAll(): Promise<FieldValues[] | undefined> {
     return emitHttp("GET", `${this.metadata.apiPrefix}/all`)
       .then((res) => res.json())
       .catch((reason) => {
@@ -55,7 +53,7 @@ export default class EntityService<
       });
   }
 
-  async create(data: Omit<T, 'id'>): Promise<boolean> {
+  async create(data: FieldValues): Promise<boolean> {
     return emitHttpJson("POST", this.metadata.apiPrefix, data)
       .then((res) => res.status === 200 || res.status === 201)
       .catch((reason) => {
@@ -64,7 +62,7 @@ export default class EntityService<
       });
   }
 
-  async update(id: string | number, data: Omit<T, 'id'>): Promise<boolean> {
+  async update(id: string | number, data: FieldValues): Promise<boolean> {
     return emitHttpJson("put", `${this.metadata.apiPrefix}/${id}`, data)
       .then((res) => res.status === 200 || res.status === 201)
       .catch((reason) => {
@@ -112,7 +110,7 @@ export default class EntityService<
   useCreate(onSuccess?: () => void) {
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (data: Omit<T, "id">) => this.create(data),
+      mutationFn: (data: FieldValues) => this.create(data),
       onSuccess: async () => {
         await Promise.all([
           queryClient.invalidateQueries({
@@ -131,7 +129,7 @@ export default class EntityService<
   useUpdate(onSuccess?: () => void, silent?: boolean) {
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (params: { id: string | number; data: Omit<T, 'id'> }) =>
+      mutationFn: (params: { id: string | number; data: FieldValues }) =>
         this.update(params.id, params.data),
       onSuccess: async (_, variables) => {
         await Promise.all([

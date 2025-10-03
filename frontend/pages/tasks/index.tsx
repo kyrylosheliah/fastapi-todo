@@ -1,8 +1,13 @@
-import { EntityTable } from "@/components/data/EntityTable";
 import { SearchParams, toSearchParamsString } from "@/data/Search";
 import { TaskService } from "@/data/Task/TaskService";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
+
+const EntityTable = dynamic(() => import("@/components/data/EntityTable").then(m => m.EntityTable), {
+  loading: () => <p>Loading...</p>,
+  ssr: false,
+});
 
 export default function TasksPage() {
   const router = useRouter();

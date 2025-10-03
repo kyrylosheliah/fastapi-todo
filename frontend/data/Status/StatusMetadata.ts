@@ -1,9 +1,8 @@
 import { EntityMetadata } from "@/data/EntityMetadata";
 import { StatusBadge } from "./StatusBadge";
 import { StatusDTO } from "./StatusDTO";
-import { IStatus } from "./IStatus";
 
-export const StatusMetadata: EntityMetadata<IStatus> = {
+export const StatusMetadata: EntityMetadata = {
   apiPrefix: "/status",
   indexPagePrefix: "/statuses",
   singular: "Status",

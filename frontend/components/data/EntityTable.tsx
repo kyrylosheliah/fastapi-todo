@@ -12,16 +12,15 @@ import EntityService from "@/data/EntityService";
 import { Input } from "@/components/ui/input";
 import { EntityModalForm } from "@/components/data/EntityModalForm";
 import { useEntitySearch } from "@/data/useEntitySearch";
+import { FieldValues } from "react-hook-form";
 
-export function EntityTable<
-  T extends Entity
->(params: {
+export function EntityTable(params: {
   pickerState?: [
     number | undefined,
     React.Dispatch<React.SetStateAction<number | undefined>>,
   ];
   relationFilter?: { key: string; value: any };
-  service: EntityService<T>;
+  service: EntityService;
   searchParams: {
     value: SearchParams;
     set: (nextSearch: SearchParams) => void;
@@ -72,7 +71,7 @@ export function EntityTable<
     }
   }, [rowSelection]);
 
-  let columns: ColumnDef<T>[] = [];
+  let columns: ColumnDef<FieldValues>[] = [];
   if (params.edit || params.pickerState) {
     columns.push({
       id: "select",
@@ -104,7 +103,7 @@ export function EntityTable<
     });
   }
   columns = columns.concat(
-    (Object.keys(metadata.fields) as (keyof T)[]).map((key) => ({
+    (Object.keys(metadata.fields) as (keyof FieldValues)[]).map((key) => ({
       header: metadata.fields[key].label,
       accessorKey: key,
       cell: (context) => (
@@ -132,7 +131,7 @@ export function EntityTable<
     });
   }
 
-  const table = useReactTable<T>({
+  const table = useReactTable<FieldValues>({
     data: entities,
     pageCount,
     columns,

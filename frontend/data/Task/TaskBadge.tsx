@@ -1,8 +1,8 @@
 import { BadgeIcon } from "@/components/BadgeIcon";
-import { ITask } from "./ITask";
 import { ListIcon } from "lucide-react";
+import { FieldValues } from "react-hook-form";
 
-export const TaskBadge = (e: ITask) => {
+export const TaskBadge = (e: FieldValues) => {
   return BadgeIcon({
     children: e.title,
     icon: (

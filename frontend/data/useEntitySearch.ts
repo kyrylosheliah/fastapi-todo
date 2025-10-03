@@ -1,45 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { PaginationState, SortingState } from '@tanstack/react-table';
-import EntityService from '@/data/EntityService';
-import { getDefaultSearchParams, SearchDTO, SearchParams } from '@/data/Search';
-import { Entity } from '@/data/Entity';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { PaginationState, SortingState } from "@tanstack/react-table";
+import EntityService from "@/data/EntityService";
+import { getDefaultSearchParams, SearchDTO, SearchParams } from "@/data/Search";
 
-interface UseEntitySearchParams<T extends Entity> {
-  service: EntityService<T>;
+export function useEntitySearch({
+  service,
+  searchParams: searchParamsControl,
+  relationFilter,
+}: {
+  service: EntityService;
   searchParams: {
     value: SearchParams;
     set: (nextSearch: SearchParams) => void;
   };
   relationFilter?: { key: string; value: any };
-}
-
-interface UseEntitySearchReturn<T extends Entity> {
-  data: any;
-  isPending: boolean;
-  entities: T[];
-  pageCount: number;
-  pagination: PaginationState;
-  sorting: SortingState;
-  globalFilter: string;
-  handlePaginationChange: (updater: any) => void;
-  handleSortingChange: (updater: any) => void;
-  setGlobalFilter: (filter: string) => void;
-}
-
-export function useEntitySearch<T extends Entity>({
-  service,
-  searchParams: searchParamsControl,
-  relationFilter,
-}: UseEntitySearchParams<T>): UseEntitySearchReturn<T> {
+}) {
   // Parse initial search params once and merge with defaults
   const initialParams = useMemo(() => {
     const defaults = getDefaultSearchParams();
-    const sourceParametersParsing = SearchDTO.safeParse(searchParamsControl.value);
-    
+    const sourceParametersParsing = SearchDTO.safeParse(
+      searchParamsControl.value
+    );
+
     if (sourceParametersParsing.success) {
       return sourceParametersParsing.data;
     }
-    
+
     // Merge partial params with defaults
     return {
       ...defaults,
@@ -47,9 +33,11 @@ export function useEntitySearch<T extends Entity>({
       pageNo: searchParamsControl.value.pageNo ?? defaults.pageNo,
       pageSize: searchParamsControl.value.pageSize ?? defaults.pageSize,
       ascending: searchParamsControl.value.ascending ?? defaults.ascending,
-      orderByColumn: searchParamsControl.value.orderByColumn ?? defaults.orderByColumn,
+      orderByColumn:
+        searchParamsControl.value.orderByColumn ?? defaults.orderByColumn,
       criteria: searchParamsControl.value.criteria ?? defaults.criteria,
-      globalFilter: searchParamsControl.value.globalFilter ?? defaults.globalFilter,
+      globalFilter:
+        searchParamsControl.value.globalFilter ?? defaults.globalFilter,
     };
   }, []); // Only run once on mount
 
@@ -66,7 +54,9 @@ export function useEntitySearch<T extends Entity>({
     },
   ]);
 
-  const [globalFilter, setGlobalFilter] = useState<string>(initialParams.globalFilter);
+  const [globalFilter, setGlobalFilter] = useState<string>(
+    initialParams.globalFilter
+  );
 
   // Build search params from current state
   const searchParams: SearchParams = useMemo(() => {
@@ -91,8 +81,8 @@ export function useEntitySearch<T extends Entity>({
 
     const result = SearchDTO.safeParse(nextSearch);
     if (!result.success) {
-      console.error('Invalid search parameters:', result.error);
-      console.log('Failed params:', nextSearch);
+      console.error("Invalid search parameters:", result.error);
+      console.log("Failed params:", nextSearch);
       return initialParams;
     }
 
@@ -107,7 +97,7 @@ export function useEntitySearch<T extends Entity>({
   const handlePaginationChange = useCallback(
     (updater: any) => {
       const newPagination =
-        typeof updater === 'function' ? updater(pagination) : updater;
+        typeof updater === "function" ? updater(pagination) : updater;
       setPagination(newPagination);
     },
     [pagination]
@@ -116,7 +106,7 @@ export function useEntitySearch<T extends Entity>({
   const handleSortingChange = useCallback(
     (updater: any) => {
       const newSorting: SortingState =
-        typeof updater === 'function' ? updater(sorting) : updater;
+        typeof updater === "function" ? updater(sorting) : updater;
       setSorting(newSorting);
     },
     [sorting]
@@ -125,7 +115,7 @@ export function useEntitySearch<T extends Entity>({
   const handleGlobalFilterChange = useCallback((filter: string) => {
     setGlobalFilter(filter);
     // Reset to first page when filtering
-    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, []);
 
   const { data, isPending } = service.useSearch(searchParams);

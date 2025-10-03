@@ -3,10 +3,7 @@ import { StatusBadge } from "./StatusBadge";
 import { StatusDTO } from "./StatusDTO";
 import { IStatus } from "./IStatus";
 
-export const StatusMetadata: EntityMetadata<
-  IStatus,
-  typeof StatusDTO
-> = {
+export const StatusMetadata: EntityMetadata<IStatus> = {
   apiPrefix: "/status",
   indexPagePrefix: "/statuses",
   singular: "Status",

@@ -3,10 +3,7 @@ import { CategoryBadge } from "./CategoryBadge";
 import { CategoryDTO } from "./CategoryDTO";
 import { ICategory } from "./ICategory";
 
-export const CategoryMetadata: EntityMetadata<
-  ICategory,
-  typeof CategoryDTO
-> = {
+export const CategoryMetadata: EntityMetadata<ICategory> = {
   apiPrefix: "/category",
   indexPagePrefix: "/categories",
   singular: "Category",

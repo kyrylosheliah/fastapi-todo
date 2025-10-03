@@ -10,8 +10,9 @@ class Category(BaseDataModel):
     __tablename__ = "category"
 
     id: Mapped[Optional[int]] = mapped_column(None, primary_key=True)
-    name: Mapped[str] = searchable("partial")(
-        mapped_column()
-    )
+
+    name: Mapped[str] = mapped_column()
 
     tasks: Mapped[List["Task"]] = relationship("Task", back_populates="category")
+
+searchable(Category, "name", "partial")

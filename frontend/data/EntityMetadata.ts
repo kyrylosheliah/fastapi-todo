@@ -1,11 +1,10 @@
-import type { z } from "zod";
 import type { ReactNode } from "react";
 import { Entity } from "./Entity";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
+import z from "zod";
 
 export type EntityMetadata<
   T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
 > = {
   apiPrefix: string;
   indexPagePrefix: string;
@@ -19,7 +18,7 @@ export type EntityMetadata<
     apiPrefix: keyof typeof EntityServiceRegistry;
     fkField: string;
   }>,
-  formSchema: TSchema;
+  formSchema: z.ZodType<Omit<T, "id">>;
   peekComponent: (entity: T) => ReactNode;
 };
 

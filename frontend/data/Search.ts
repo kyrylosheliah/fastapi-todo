@@ -2,18 +2,20 @@ import { z } from "zod";
 import { getZodDefaults } from "../utils/getZodDefaults";
 import type { Entity } from "./Entity";
 
-export const SearchSchema = z.object({
-  pageNo: z.coerce.number().min(1).default(1),
-  pageSize: z.coerce.number().min(1).max(20).default(10),
-  ascending: z.coerce.boolean().default(true),
-  orderByColumn: z.string().default('id'),
+export const SearchDTO = z.object({
+  pageNo: z.number().min(1).default(1),
+  pageSize: z.number().min(1).max(20).default(10),
+  ascending: z.boolean().default(true),
+  orderByColumn: z.string().default("id"),
   criteria: z.record(z.string(), z.any()).default({}),
   globalFilter: z.string().default(""),
 });
 
-export type SearchParams = z.infer<typeof SearchSchema>;
+export type SearchParams = z.infer<typeof SearchDTO>;
 
-export const defaultSearchParams: SearchParams = getZodDefaults(SearchSchema) as SearchParams;
+const defaultSearchParams: SearchParams = getZodDefaults(SearchDTO) as SearchParams;
+
+export const getDefaultSearchParams = () => ({...defaultSearchParams});
 
 export const getDefaultSearchParamsString = () => {
   return toSearchParamsString(defaultSearchParams);
@@ -48,8 +50,8 @@ export interface SearchState {
 }
 
 export const validateSearch = (search: Record<string, unknown>) => {
-  const result = SearchSchema.safeParse(search);
-  if (!result.success) throw new Error('Invalid query params');
+  const result = SearchDTO.safeParse(search);
+  if (!result.success) throw new Error("Invalid query params");
   return result.data;
 };
 

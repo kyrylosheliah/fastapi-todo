@@ -1,20 +1,19 @@
-import type { z } from "zod";
 import { emitHttp, emitHttpJson } from "../utils/api";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Entity } from "@/data/Entity";
 import { EntityMetadata } from "@/data/EntityMetadata";
 import { SearchParams, SearchResponse } from "@/data/Search";
+import { DefaultValues } from "react-hook-form";
 
 export default class EntityService<
   T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
 > {
-  constructor(readonly metadata: EntityMetadata<T, TSchema>) {}
+  constructor(readonly metadata: EntityMetadata<T>) {}
 
-  getFormFields(entity: T): Omit<T, 'id'> {
+  getFormFields(entity: T): DefaultValues<T> {
     const temp: any = { ...entity };
     delete temp.id;
-    return temp as Omit<T, 'id'>;
+    return temp;
   }
 
   async invalidateAllLists(queryClient: QueryClient) {

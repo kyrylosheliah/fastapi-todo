@@ -1,28 +1,27 @@
 import { useCallback, useEffect, useMemo, useState, type JSX } from "react";
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type PaginationState, type RowSelectionState, type SortingState } from "@tanstack/react-table";
-import type { z } from "zod";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import { useRouter } from "next/router";
 import { Checkbox } from "@/components/Checkbox";
 import ButtonIcon from "@/components/ButtonIcon";
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SearchIcon, SquareArrowUpRightIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SquareArrowUpRightIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
 import { Entity } from "@/data/Entity";
-import { SearchParams, searchStatesToParameters, SearchSchema } from "@/data/Search";
+import { SearchParams, searchStatesToParameters, SearchDTO, getDefaultSearchParams } from "@/data/Search";
 import EntityService from "@/data/EntityService";
 import { Input } from "@/components/ui/input";
 import { EntityModalForm } from "@/components/data/EntityModalForm";
+import { useEntitySearch } from "@/data/useEntitySearch";
 
 export function EntityTable<
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
+  T extends Entity
 >(params: {
   pickerState?: [
     number | undefined,
     React.Dispatch<React.SetStateAction<number | undefined>>,
   ];
   relationFilter?: { key: string; value: any };
-  service: EntityService<T, TSchema>;
+  service: EntityService<T>;
   searchParams: {
     value: SearchParams;
     set: (nextSearch: SearchParams) => void;
@@ -34,101 +33,128 @@ export function EntityTable<
   const metadata = params.service.metadata;
   const service = params.service;
 
-  const sourceParameters = params.searchParams.value;
+  // const sourceParametersParsing = SearchDTO.safeParse(params.searchParams.value);
+  // const sourceParameters = sourceParametersParsing.success ? sourceParametersParsing.data : getDefaultSearchParams();
 
-  const pagination: PaginationState = useMemo(() => ({
-    pageIndex: sourceParameters.pageNo - 1,
-    pageSize: sourceParameters.pageSize,
-  }), [sourceParameters.pageNo, sourceParameters.pageSize]);
-
-  const [optimisticSorting, setOptimisticSorting] = useState<SortingState>(() => [{
-    id: sourceParameters.orderByColumn,
-    desc: !sourceParameters.ascending,
-  }]);
-
-  useEffect(() => {
-    const newSorting = [
-      {
-        id: sourceParameters.orderByColumn,
-        desc: !sourceParameters.ascending,
-      },
-    ];
-    setOptimisticSorting(newSorting);
-  }, [sourceParameters.orderByColumn, sourceParameters.ascending]);
-
-  const sorting: SortingState = useMemo(
-    () => [
-      {
-        id: sourceParameters.orderByColumn,
-        desc: !sourceParameters.ascending,
-      },
-    ],
-    [sourceParameters.pageNo, sourceParameters.ascending]
-  );
-
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-
-  const searchParams: SearchParams = useMemo(() => {
-    let nextSearch = searchStatesToParameters({
-      pagination,
-      sorting,
-      globalFilter,
-    });
-    if (params.relationFilter) {
-      nextSearch.criteria[params.relationFilter.key] =
-        params.relationFilter.value;
-    }
-    const result = SearchSchema.safeParse(nextSearch);
-    if (!result.success) {
-      console.log(result.error.format());
-      console.log(nextSearch);
-      // window.alert(`Invalid search parameters, ${result.error.format()}`);
-      return sourceParameters;
-    }
-    return nextSearch;
-  }, [
+  const {
+    // entities,
+    // pageCount,
+    // pagination,
+    // optimisticSorting,
+    // globalFilter,
+    // handlePaginationChange,
+    // handleSortingChange,
+    // setGlobalFilter,
+    // isPending,
+    data,
+    isPending,
+    entities,
+    pageCount,
     pagination,
     sorting,
     globalFilter,
-    params.relationFilter,
-    sourceParameters,
-  ]);
+    handlePaginationChange,
+    handleSortingChange,
+    setGlobalFilter,
+  } = useEntitySearch({
+    service: params.service,
+    searchParams: params.searchParams,
+    relationFilter: params.relationFilter,
+  });
 
-  const handlePaginationChange = useCallback(
-    (updater: any) => {
-      const newPagination =
-        typeof updater === "function" ? updater(pagination) : updater;
-      const nextSearch = {
-        ...searchParams,
-        pageNo: newPagination.pageIndex + 1,
-        pageSize: newPagination.pageSize,
-      };
-      params.searchParams.set(nextSearch);
-    },
-    [params.searchParams.value, pagination, sourceParameters]
-  );
+  // const pagination: PaginationState = useMemo(() => ({
+  //   pageIndex: sourceParameters.pageNo - 1,
+  //   pageSize: sourceParameters.pageSize,
+  // }), [sourceParameters.pageNo, sourceParameters.pageSize]);
 
-  const handleSortingChange = useCallback(
-    (updater: any) => {
-      const newSorting: SortingState =
-        typeof updater === "function" ? updater(sorting) : updater;
-      setOptimisticSorting(newSorting);
-      const sortingColumn = newSorting[0]?.id || searchParams.orderByColumn;
-      const nextSearch = {
-        ...searchParams,
-        orderByColumn: sortingColumn,
-        ascending: !newSorting[0]?.desc,
-        criteria: { [sortingColumn]: globalFilter },
-      };
-      params.searchParams.set(nextSearch);
-    },
-    [params.searchParams.value, optimisticSorting, pagination, sourceParameters]
-  );
+  // const [optimisticSorting, setOptimisticSorting] = useState<SortingState>(() => [{
+  //   id: sourceParameters.orderByColumn,
+  //   desc: !sourceParameters.ascending,
+  // }]);
 
-  const { data, isPending } = service.useSearch(searchParams);
+  // useEffect(() => {
+  //   const newSorting = [
+  //     {
+  //       id: sourceParameters.orderByColumn,
+  //       desc: !sourceParameters.ascending,
+  //     },
+  //   ];
+  //   setOptimisticSorting(newSorting);
+  // }, [sourceParameters.orderByColumn, sourceParameters.ascending]);
 
-  const entities = data !== undefined ? data.items || [] : [];
-  const pageCount = data !== undefined ? data.pageCount : 0;
+  // const sorting: SortingState = useMemo(
+  //   () => [
+  //     {
+  //       id: sourceParameters.orderByColumn,
+  //       desc: !sourceParameters.ascending,
+  //     },
+  //   ],
+  //   [sourceParameters.pageNo, sourceParameters.ascending]
+  // );
+
+  // const [globalFilter, setGlobalFilter] = useState<string>("");
+
+  // const searchParams: SearchParams = useMemo(() => {
+  //   let nextSearch = searchStatesToParameters({
+  //     pagination,
+  //     sorting,
+  //     globalFilter,
+  //   });
+  //   if (params.relationFilter) {
+  //     nextSearch.criteria[params.relationFilter.key] =
+  //       params.relationFilter.value;
+  //   }
+  //   const result = SearchDTO.safeParse(nextSearch);
+  //   if (!result.success) {
+  //     console.log(result.error);
+  //     console.log(nextSearch);
+  //     // window.alert(`Invalid search parameters, ${result.error.format()}`);
+  //     return getDefaultSearchParams();
+  //   }
+  //   return nextSearch;
+  // }, [
+  //   pagination,
+  //   sorting,
+  //   globalFilter,
+  //   params.relationFilter,
+  //   sourceParameters,
+  // ]);
+
+  // const handlePaginationChange = useCallback(
+  //   (updater: any) => {
+  //     const newPagination =
+  //       typeof updater === "function" ? updater(pagination) : updater;
+  //     const nextSearch = {
+  //       ...searchParams,
+  //       pageNo: newPagination.pageIndex + 1,
+  //       pageSize: newPagination.pageSize,
+  //     };
+  //     params.searchParams.set(nextSearch);
+  //   },
+  //   [params.searchParams.value, pagination, sourceParameters]
+  // );
+
+  // const handleSortingChange = useCallback(
+  //   (updater: any) => {
+  //     const newSorting: SortingState =
+  //       typeof updater === "function" ? updater(sorting) : updater;
+  //     setOptimisticSorting(newSorting);
+  //     const sortingColumn = newSorting[0]?.id || searchParams.orderByColumn;
+  //     const nextSearch = {
+  //       ...searchParams,
+  //       orderByColumn: sortingColumn,
+  //       ascending: !newSorting[0]?.desc,
+  //       criteria: { [sortingColumn]: globalFilter },
+  //     };
+  //     params.searchParams.set(nextSearch);
+  //   },
+  //   [params.searchParams.value, optimisticSorting, pagination, sourceParameters]
+  // );
+
+  // const { data, isPending } = service.useSearch(searchParams);
+
+  // const entities = data !== undefined ? data.items || [] : [];
+  // const pageCount = data !== undefined ? data.pageCount : 0;
 
   const router = useRouter();
 
@@ -219,7 +245,7 @@ export function EntityTable<
     pageCount,
     columns,
     state: {
-      sorting: optimisticSorting,
+      sorting,
       globalFilter,
       pagination,
       rowSelection,

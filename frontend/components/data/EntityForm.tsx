@@ -1,9 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
+import { FieldErrors, FieldValues, useForm } from "react-hook-form";
 import { EntityFormField } from "./EntityFormField";
-import { type FieldValues } from "react-hook-form";
 import { Entity } from "@/data/Entity";
 import EntityService from "@/data/EntityService";
 import { Button } from "@/components/ui/button";
@@ -12,22 +10,21 @@ import { Trash2Icon } from "lucide-react";
 
 export const EntityForm = <
   T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
 >(params: {
   edit?: boolean;
-  onSubmit: (newFields: Omit<T, 'id'>) => void;
+  onSubmit: (newFields: T) => void;
   delete?: () => Promise<boolean>;
   entity: T;
-  service: EntityService<T, TSchema>;
+  service: EntityService<T>;
   breakPopover?: boolean;
 }) => {
   const metadata = params.service.metadata;
 
   const defaultFormFields = params.service.getFormFields(params.entity);
 
-  const form = useForm<FieldValues>({
+  const form = useForm<T>({
     resolver: zodResolver(metadata.formSchema as any), // TODO: typescript
-    defaultValues: defaultFormFields as any,
+    defaultValues: defaultFormFields,
   });
 
   useEffect(() => {
@@ -40,8 +37,8 @@ export const EntityForm = <
 
   const onSubmit = params.edit
     ? form.handleSubmit(
-        (newFields: any) => params.onSubmit(newFields), // TODO: typescript
-        (m: any) => alert(`Invalid form ${JSON.stringify(m)}`)
+        (newFields: T) => params.onSubmit(newFields),
+        (m: FieldErrors<T>) => alert(`Invalid form ${JSON.stringify(m)}`)
       )
     : undefined;
 

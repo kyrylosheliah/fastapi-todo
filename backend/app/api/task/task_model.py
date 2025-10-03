@@ -10,12 +10,9 @@ class Task(BaseDataModel):
     __tablename__ = "task"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    title: Mapped[Optional[str]] = searchable("title", "partial")(
-        mapped_column()
-    )
-    description: Mapped[Optional[str]] = searchable("description", "partial")(
-        mapped_column(nullable=True)
-    )
+
+    title: Mapped[Optional[str]] = mapped_column()
+    description: Mapped[Optional[str]] = mapped_column(nullable=True)
     due_date: Mapped[datetime] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     priority: Mapped[int] = mapped_column(default=0)
@@ -25,3 +22,6 @@ class Task(BaseDataModel):
     
     status: Mapped[Optional["Status"]] = relationship(back_populates="tasks")
     category: Mapped[Optional["Category"]] = relationship(back_populates="tasks")
+
+searchable(Task, "title", "partial")
+searchable(Task, "description", "partial")

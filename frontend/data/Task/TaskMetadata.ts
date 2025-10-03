@@ -3,10 +3,7 @@ import { TaskBadge } from "./TaskBadge";
 import { TaskDTO } from "./TaskDTO";
 import { ITask } from "./ITask";
 
-export const TaskMetadata: EntityMetadata<
-  ITask,
-  typeof TaskDTO
-> = {
+export const TaskMetadata: EntityMetadata<ITask> = {
   apiPrefix: "/task",
   indexPagePrefix: "/tasks",
   singular: "Task",

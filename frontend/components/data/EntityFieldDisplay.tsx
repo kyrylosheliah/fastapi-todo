@@ -1,6 +1,5 @@
 import { useRouter } from "next/router";
 import type { FieldValues, Path } from "react-hook-form";
-import type { z } from "zod";
 import { EntityForm } from "./EntityForm";
 import { CalendarIcon, CircleOffIcon, ClockIcon, LinkIcon, SquareArrowUpRightIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +12,11 @@ import { BadgeIcon } from "@/components/BadgeIcon";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 
 export const EntityFieldDisplay = <
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
-  EntityFormValues extends FieldValues,
+  T extends Entity
 >(params: {
-  fieldKey: (keyof EntityFormValues) & (keyof T) & Path<EntityFormValues>;
+  fieldKey: (keyof FieldValues) & (keyof T) & Path<FieldValues>;
   fieldValue: any;
-  service: EntityService<T, TSchema>;
+  service: EntityService<T>;
   breakPopover?: boolean;
 }) => {
   const fieldMetadata = params.service.metadata.fields[params.fieldKey]

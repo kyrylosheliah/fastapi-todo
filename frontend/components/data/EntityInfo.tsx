@@ -7,14 +7,13 @@ import { Entity } from "@/data/Entity";
 import ButtonText from "../ButtonText";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import EntityService from "@/data/EntityService";
-import { defaultSearchParams, SearchParams } from "@/data/Search";
+import { getDefaultSearchParams, SearchParams } from "@/data/Search";
 
 export const EntityInfo = <
   T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>
 >(params: {
   entityId: string;
-  service: EntityService<T, TSchema>;
+  service: EntityService<T>;
 }) => {
   const router = useRouter();
 
@@ -102,7 +101,7 @@ export const EntityInfo = <
         {metadata.relations && metadata.relations.length ? (
           metadata.relations.map((relation) => {
             const [searchParams, setSearchParams] =
-              useState<SearchParams>(defaultSearchParams);
+              useState<SearchParams>(getDefaultSearchParams());
             return (
               <Fragment key={`relation_${relation.apiPrefix}`}>
                 <h2 className="mb-4 text-xl fw-600">{relation.label}</h2>

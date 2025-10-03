@@ -4,11 +4,9 @@ import { Entity } from "@/data/Entity";
 import { entityDefaultValues } from "@/data/EntityMetadata";
 import EntityService from "@/data/EntityService";
 import { ReactNode } from "react";
-import z from "zod";
 
 export const EntityModalForm = <
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, "id">>,
+  T extends Entity
 >(params: {
   opened: boolean;
   icon?: ReactNode;
@@ -18,7 +16,7 @@ export const EntityModalForm = <
   create?: (newValues: Omit<T, 'id'>) => Promise<boolean>;
   delete?: () => Promise<boolean>;
   entityId: number | undefined;
-  service: EntityService<T, TSchema>;
+  service: EntityService<T>;
 }) => {
   const { data, isPending, isSuccess } = params.service.useGet(
     params.entityId || 0

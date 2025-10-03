@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { type FieldValues, type UseFormReturn, type Path, useWatch } from "react-hook-form";
+import { type FieldValues, type UseFormReturn, type Path, useWatch, get, PathValue } from "react-hook-form";
 import type { z } from "zod";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
@@ -11,7 +11,7 @@ import { Checkbox } from "../Checkbox";
 import { Modal } from "../Modal";
 import { Entity } from "@/data/Entity";
 import { DatabaseType, fieldMetadataInitialValue } from "@/data/EntityMetadata";
-import { SearchParams, defaultSearchParams } from "@/data/Search";
+import { SearchParams, getDefaultSearchParams } from "@/data/Search";
 import EntityService from "@/data/EntityService";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import { Input } from "@/components/ui/input";
@@ -23,14 +23,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
 
 export const EntityFormField = <
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
-  EntityFormValues extends FieldValues
+  T extends Entity
 >(params: {
   edit?: boolean;
-  service: EntityService<T, TSchema>;
-  form: UseFormReturn<EntityFormValues>;
-  fieldKey: (keyof T) & (keyof TSchema) & Path<EntityFormValues>;
+  service: EntityService<T>;
+  form: UseFormReturn<T>;
+  fieldKey: string & keyof T & Path<T>;
   breakPopover?: boolean;
 }) => {
   const metadata = params.service.metadata;
@@ -47,7 +45,7 @@ export const EntityFormField = <
 
   const fieldValue = useWatch({
     control: params.form.control,
-    name: params.fieldKey,
+    name: [params.fieldKey],
   });
 
   const isDirty: boolean | undefined = useMemo(
@@ -104,7 +102,7 @@ export const EntityFormField = <
           breakPopover={params.breakPopover}
         />
       )}
-      {errors[params.fieldKey] && (
+      {get(errors, params.fieldKey as Path<T>) && (
         <p className="text-red-600 text-xs m-0">
           {errors[params.fieldKey]?.message?.toString()}
         </p>
@@ -143,14 +141,12 @@ const EntityFieldIcon = (params: {
 };
 
 const EntityFieldControl = <
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
-  EntityFormValues extends FieldValues,
+  T extends Entity
 >(params: {
-  fieldKey: (keyof EntityFormValues) & (keyof T) & Path<EntityFormValues>;
+  fieldKey: string & (keyof T) & Path<T>;
   fieldValue: any;
-  form: UseFormReturn<EntityFormValues>;
-  service: EntityService<T, TSchema>;
+  form: UseFormReturn<T>;
+  service: EntityService<T>;
 }) => {
   const fieldValue = useWatch({
     control: params.form.control,
@@ -160,7 +156,7 @@ const EntityFieldControl = <
   const fieldMetadata = params.service.metadata.fields[params.fieldKey];
   
   const initialValue = (params.form.formState.defaultValues !== undefined
-    && params.form.formState.defaultValues[params.fieldKey] as any)
+    && get(params.form.formState.defaultValues, params.fieldKey))
       || fieldMetadataInitialValue(fieldMetadata);
 
   const keyOrConst =
@@ -192,14 +188,12 @@ const EntityFieldControl = <
 };
 
 const EntityFieldInput = <
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
-  EntityFormValues extends FieldValues,
+  T extends Entity
 >(params: {
-  fieldKey: (keyof EntityFormValues) & (keyof T) & Path<EntityFormValues>;
+  fieldKey: (keyof FieldValues) & (keyof T) & Path<T>;
   fieldValue: any;
-  form: UseFormReturn<EntityFormValues>;
-  service: EntityService<T, TSchema>;
+  form: UseFormReturn<T>;
+  service: EntityService<T>;
   initialValue: any;
 }) => {
   const errors = params.form.formState.errors;
@@ -211,7 +205,7 @@ const EntityFieldInput = <
     () =>
       cx(
         "border w-full",
-        errors[params.fieldKey]
+        get(errors, params.fieldKey)
           ? "border-red-400"
           : isDirty
             ? "border-yellow-600"
@@ -260,8 +254,8 @@ const EntityFieldInput = <
             <Calendar
               mode="single"
               selected={params.fieldValue && !isNaN(new Date(params.fieldValue).getTime())}
-              onSelect={(v) =>
-                params.form.setValue(params.fieldKey, v && v.toISOString())
+              onSelect={(v: Date | undefined) =>
+                params.form.setValue(params.fieldKey, (v ? v.toISOString() : "") as PathValue<T, typeof params.fieldKey>)
               }
             />
           </PopoverContent>
@@ -323,21 +317,19 @@ const EntityFieldInput = <
 };
 
 const EntityFormFkInput = <
-  T extends Entity,
-  TSchema extends z.ZodType<Omit<T, 'id'>>,
-  EntityFormValues extends FieldValues,
+  T extends Entity
 >(params: {
-  fieldKey: (keyof EntityFormValues) & (keyof T) & Path<EntityFormValues>;
+  fieldKey: (keyof FieldValues) & (keyof T) & Path<T>;
   fieldValue: any;
-  form: UseFormReturn<EntityFormValues>;
-  service: EntityService<T, TSchema>;
+  form: UseFormReturn<T>;
+  service: EntityService<T>;
   commonClasses?: string;
   initialValue: any;
 }) => {
   const fieldMetadata = params.service.metadata.fields[params.fieldKey];
   const singular = fieldMetadata.label;
   const [searchParams, setSearchParams] =
-    useState<SearchParams>(defaultSearchParams);
+    useState<SearchParams>(getDefaultSearchParams());
   const [pickerEntityId, setPickerEntityId] = useState<number | undefined>(params.fieldValue);
   useEffect(() => {
     if (pickerEntityId === undefined) {

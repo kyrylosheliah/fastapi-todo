@@ -1,40 +1,34 @@
-from typing import Literal, Dict, Any
+from typing import Literal, Dict, Any, List
 
-_searchable_registry: Dict[Any, Dict[str, Any]] = {}
+searchable_registry: Dict[Any, Dict[str, Any]] = {}
 
-def searchable(
-    column_name: str,
-    search_type: Literal["exact", "partial", "prefix", "suffix"] = "partial",
-    weight: int = 1,
-):
+# Alternative approach using a class-based registry (more reliable)
+def searchable(model_class, column_name: str, search_type: str = "partial", weight: int = 1):
     """
-    Marks a column as searchable by storing metadata in a registry.
+    Manually register a column as searchable.
+    Usage:
+        register_searchable(MyModel, "name", "partial")
     """
-    def decorator(column):
-        # Store metadata in global registry using column id
-        _searchable_registry[id(column)] = {
-            "type": search_type,
-            "weight": weight,
-        }
-        return column
-    
-    return decorator
+    key = (model_class.__name__, column_name)
+    searchable_registry[key] = {
+        "type": search_type,
+        "weight": weight,
+    }
 
-def get_searchable_columns(model_class):
+def get_searchable_columns(model_class) -> List[Dict[str, Any]]:
     """
-    Get all searchable columns for a model class.
-    Returns dict: {column_name: metadata}
+    Get searchable columns from the registry (alternative approach).
     """
-    searchable_cols = {}
+    searchable_cols = []
+    class_name = model_class.__name__
     
-    for attr_name in dir(model_class):
-        try:
-            attr = getattr(model_class, attr_name)
-            if hasattr(attr, "property") and hasattr(attr.property, "columns"):
-                for column in attr.property.columns:
-                    if id(column) in _searchable_registry:
-                        searchable_cols[column.name] = _searchable_registry[id(column)]
-        except:
-            continue
+    for (registered_class, column_name), metadata in searchable_registry.items():
+        if registered_class == class_name:
+            searchable_cols.append({
+                "key": column_name,
+                "type": metadata["type"],
+                "weight": metadata.get("weight", 1),
+            })
     
+    searchable_cols.sort(key=lambda x: x["weight"], reverse=True)
     return searchable_cols

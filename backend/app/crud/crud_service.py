@@ -19,19 +19,20 @@ class BaseCrudService(Generic[T]):
         req: EntitySearchDto,
     ) -> Dict[str, Any]:
         query = db.query(self.model)
-        searchable_fields = get_searchable_columns(self.model)
 
+        # TODO: per-column filter ability matching
         # optional filtering
-        for column, criterion in req.criteria.items():
-            if not is_valid_column(self.model, column):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid criterion column name: {column}",
-                )
-            if criterion != "":
-                query = query.filter(getattr(self.model, column) == criterion)
+        # for column, criterion in req.criteria.items():
+        #     if not is_valid_column(self.model, column):
+        #         raise HTTPException(
+        #             status_code=status.HTTP_400_BAD_REQUEST,
+        #             detail=f"Invalid criterion column name: {column}",
+        #         )
+        #     if criterion != "":
+        #         query = query.filter(getattr(self.model, column) == criterion)
 
         # global filtering (search)
+        searchable_fields = get_searchable_columns(self.model)
         filter_value = req.globalFilter.strip()
         if filter_value:
             global_conditions = []

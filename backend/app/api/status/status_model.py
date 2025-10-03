@@ -8,9 +8,11 @@ class Status(BaseDataModel):
     __tablename__ = "status"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = searchable("partial")(
-        mapped_column()
-    )
+
+    name: Mapped[str] = mapped_column()
+
     order: Mapped[int] = mapped_column(default=0)
 
     tasks: Mapped[List["Task"]] = relationship("Task", back_populates="status")
+
+searchable(Status, "name", "partial")

@@ -6,7 +6,6 @@ import { useRouter } from "next/router";
 import { Checkbox } from "@/components/Checkbox";
 import ButtonIcon from "@/components/ButtonIcon";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SquareArrowUpRightIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
-import { Entity } from "@/data/Entity";
 import { SearchParams } from "@/data/Search";
 import EntityService from "@/data/EntityService";
 import { Input } from "@/components/ui/input";

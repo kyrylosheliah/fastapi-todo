@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import type { FieldValues, Path } from "react-hook-form";
-import { EntityForm } from "./EntityForm";
+// import { EntityForm } from "./EntityForm";
 import { CalendarIcon, CircleOffIcon, SquareArrowUpRightIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ButtonIcon from "../ButtonIcon";
@@ -92,13 +92,14 @@ const EntityFkField = (params: {
       </HoverCardTrigger>
       <HoverCardContent className="p-0 w-full inline-block border rounded-md shadow-md flex flex-row items-start">
         <div className="py-4 pl-4">
-          <EntityForm
+          {JSON.stringify(data)}
+          {/* <EntityForm
             edit={false}
             entity={data as any}
             onSubmit={() => {}}
             service={fkService as any}
             breakPopover
-          />
+          /> */}
         </div>
         <ButtonIcon
           children={<SquareArrowUpRightIcon size={16} />}

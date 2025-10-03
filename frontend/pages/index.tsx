@@ -12,14 +12,16 @@ import { CategoryService } from "@/data/Category/CategoryService";
 import { StatusService } from "@/data/Status/StatusService";
 import { TaskService } from "@/data/Task/TaskService";
 import { ArrowDownAZIcon, ArrowUpAZIcon } from "lucide-react";
-import dynamic from "next/dynamic";
 
-const TaskCard = dynamic(() => import("@/components/todo/TaskCard").then(m => m.TaskCard), {
-  loading: () => <p>Loading...</p>,
-});
-const EntityModalForm = dynamic(() => import("@/components/data/EntityModalForm").then(m => m.EntityModalForm), {
-  loading: () => <p>Loading...</p>,
-});
+import { TaskCard } from "@/components/todo/TaskCard";
+import { EntityModalForm } from "@/components/data/EntityModalForm";
+// import dynamic from "next/dynamic";
+// const TaskCard = dynamic(() => import("@/components/todo/TaskCard").then(m => m.TaskCard), {
+//   loading: () => <p>Loading...</p>,
+// });
+// const EntityModalForm = dynamic(() => import("@/components/data/EntityModalForm").then(m => m.EntityModalForm), {
+//   loading: () => <p>Loading...</p>,
+// });
 
 export default function SearchPage(){
   const [query, setQuery] = useState("");

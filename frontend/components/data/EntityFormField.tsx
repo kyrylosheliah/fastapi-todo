@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
-import { type FieldValues, type UseFormReturn, type Path, useWatch, get, PathValue } from "react-hook-form";
+import { useMemo, useState, useEffect, Suspense } from "react";
+import { type FieldValues, type UseFormReturn, type Path, useWatch, get } from "react-hook-form";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import { EntityTable } from "./EntityTable";
@@ -338,12 +338,14 @@ const EntityFormFkInput = (params: {
         close={() => setEdit(false)}
         className="p-0"
       >
-        <EntityTable
-          service={EntityServiceRegistry[fieldMetadata.apiPrefix!] as any}
-          searchParams={{ value: searchParams, set: setSearchParams }}
-          pickerState={[pickerEntityId, setPickerEntityId]}
-          className={params.commonClasses}
-        />
+        <Suspense fallback="Loading...">
+          <EntityTable
+            service={EntityServiceRegistry[fieldMetadata.apiPrefix!] as any}
+            searchParams={{ value: searchParams, set: setSearchParams }}
+            pickerState={[pickerEntityId, setPickerEntityId]}
+            className={params.commonClasses}
+          />
+        </Suspense>
       </Modal>
       <div className="flex flex-row gap-2">
         <EntityFieldDisplay

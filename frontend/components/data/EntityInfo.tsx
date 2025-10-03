@@ -2,7 +2,6 @@ import { Fragment, useState } from "react";
 import { EntityForm } from "./EntityForm";
 import { EntityTable } from "./EntityTable";
 import { useRouter } from "next/router";
-import { Entity } from "@/data/Entity";
 import ButtonText from "../ButtonText";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import EntityService from "@/data/EntityService";

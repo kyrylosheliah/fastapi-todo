@@ -2,11 +2,11 @@ import { SearchParams, toSearchParamsString } from "@/data/Search";
 import { StatusService } from "@/data/Status/StatusService";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
-import dynamic from "next/dynamic";
-
-const EntityTable = dynamic(() => import("@/components/data/EntityTable").then(m => m.EntityTable), {
-  loading: () => <p>Loading...</p>,
-});
+import { EntityTable } from "@/components/data/EntityTable";
+// import dynamic from "next/dynamic";
+// const EntityTable = dynamic(() => import("@/components/data/EntityTable").then(m => m.EntityTable), {
+//   loading: () => <p>Loading...</p>,
+// });
 
 export default function StatusesPage() {
   const router = useRouter();

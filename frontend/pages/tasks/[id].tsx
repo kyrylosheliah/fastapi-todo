@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 
 const EntityInfo = dynamic(() => import("@/components/data/EntityInfo").then(m => m.EntityInfo), {
   loading: () => <p>Loading...</p>,
-  ssr: false,
 });
 
 export default function SpecificTaskPage() {

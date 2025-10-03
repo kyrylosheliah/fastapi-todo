@@ -6,7 +6,6 @@ import dynamic from "next/dynamic";
 
 const EntityTable = dynamic(() => import("@/components/data/EntityTable").then(m => m.EntityTable), {
   loading: () => <p>Loading...</p>,
-  ssr: false,
 });
 
 export default function TasksPage() {

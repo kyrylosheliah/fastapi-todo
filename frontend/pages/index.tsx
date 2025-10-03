@@ -16,11 +16,9 @@ import dynamic from "next/dynamic";
 
 const TaskCard = dynamic(() => import("@/components/todo/TaskCard").then(m => m.TaskCard), {
   loading: () => <p>Loading...</p>,
-  ssr: false,
 });
 const EntityModalForm = dynamic(() => import("@/components/data/EntityModalForm").then(m => m.EntityModalForm), {
   loading: () => <p>Loading...</p>,
-  ssr: false,
 });
 
 export default function SearchPage(){

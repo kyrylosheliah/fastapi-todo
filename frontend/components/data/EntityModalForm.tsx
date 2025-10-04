@@ -1,3 +1,5 @@
+"use client";
+
 import { EntityForm } from "@/components/data/EntityForm";
 import { Modal } from "@/components/Modal";
 import { entityDefaultValues } from "@/data/EntityMetadata";

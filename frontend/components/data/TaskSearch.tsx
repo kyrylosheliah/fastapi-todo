@@ -1,7 +1,14 @@
 "use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { emptyTask } from "@/data/Task/TaskHooks";
 import { ITask } from "@/data/Task/ITask";
@@ -12,22 +19,14 @@ import { CategoryService } from "@/data/Category/CategoryService";
 import { StatusService } from "@/data/Status/StatusService";
 import { TaskService } from "@/data/Task/TaskService";
 import { ArrowDownAZIcon, ArrowUpAZIcon } from "lucide-react";
-
 import { TaskCard } from "@/components/todo/TaskCard";
 import { EntityModalForm } from "@/components/data/EntityModalForm";
-// import dynamic from "next/dynamic";
-// const TaskCard = dynamic(() => import("@/components/todo/TaskCard").then(m => m.TaskCard), {
-//   loading: () => <p>Loading...</p>,
-// });
-// const EntityModalForm = dynamic(() => import("@/components/data/EntityModalForm").then(m => m.EntityModalForm), {
-//   loading: () => <p>Loading...</p>,
-// });
 
-export default function SearchPage(){
+export default function TaskSearch() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<number | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc"|"desc">("asc");
-  const [sortKey, setSortKey] = useState<"priority"|"created_at">("priority");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortKey, setSortKey] = useState<"priority" | "created_at">("priority");
 
   const [newOpen, setNewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -45,26 +44,35 @@ export default function SearchPage(){
     setEditTask(null);
   });
 
-  const { data: statusesQuery, isPending: isStatusesQueryPending } = StatusService.useGetAll();
-  const { data: categoriesQuery, isPending: isCategoriesQueryPending } = CategoryService.useGetAll();
-  const { data: tasksQuery, isPending: isTasksQueryPending } = TaskService.useGetAll();
+  const { data: statusesQuery, isPending: isStatusesQueryPending } =
+    StatusService.useGetAll();
+  const { data: categoriesQuery, isPending: isCategoriesQueryPending } =
+    CategoryService.useGetAll();
+  const { data: tasksQuery, isPending: isTasksQueryPending } =
+    TaskService.useGetAll();
 
   const [statuses, setStatuses] = useState<IStatus[]>([]);
   const [tasks, setTasks] = useState<ITask[]>([]);
   const [categories, setCategories] = useState<ICategory[]>([]);
 
-  const [inProgressId, setInProgressId] = useState<number | undefined>(undefined);
+  const [inProgressId, setInProgressId] = useState<number | undefined>(
+    undefined
+  );
   const [doneId, setDoneId] = useState<number | undefined>(undefined);
-  const [binaryStatusesPresent, setBinaryStatusesPresent] = useState<boolean>(false);
+  const [binaryStatusesPresent, setBinaryStatusesPresent] =
+    useState<boolean>(false);
 
   useEffect(() => {
-    const newStatuses = statusesQuery || []
+    const newStatuses = statusesQuery || [];
     setStatuses(newStatuses as IStatus[]);
-    const newInProgressId = newStatuses.find(s => s.name === "In Progress")?.id;
+    const newInProgressId = newStatuses.find(
+      (s) => s.name === "In Progress"
+    )?.id;
     setInProgressId(newInProgressId);
-    const newDoneId = newStatuses.find(s => s.name === "Done")?.id;
+    const newDoneId = newStatuses.find((s) => s.name === "Done")?.id;
     setDoneId(newDoneId);
-    const newBinaryStatusesPresent = (newDoneId !== undefined) && (newInProgressId !== undefined);
+    const newBinaryStatusesPresent =
+      newDoneId !== undefined && newInProgressId !== undefined;
     setBinaryStatusesPresent(newBinaryStatusesPresent);
   }, [statusesQuery, isStatusesQueryPending]);
   useEffect(() => {
@@ -74,17 +82,26 @@ export default function SearchPage(){
     setTasks((tasksQuery || []) as ITask[]);
   }, [tasksQuery, isTasksQueryPending]);
 
-  const filtered = useMemo(()=>{
+  const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let list = tasks.filter(t =>
-      (!statusFilter || t.status_id === statusFilter) &&
-      (!q || t.title.toLowerCase().includes(q) || (t.description||"").toLowerCase().includes(q))
+    let list = tasks.filter(
+      (t) =>
+        (!statusFilter || t.status_id === statusFilter) &&
+        (!q ||
+          t.title.toLowerCase().includes(q) ||
+          (t.description || "").toLowerCase().includes(q))
     );
-    list = list.sort((a,b)=>{
-      const av = (sortKey === "priority" ? (a.priority ?? 0) : new Date(a.created_at || 0).getTime());
-      const bv = (sortKey === "priority" ? (b.priority ?? 0) : new Date(b.created_at || 0).getTime());
+    list = list.sort((a, b) => {
+      const av =
+        sortKey === "priority"
+          ? a.priority ?? 0
+          : new Date(a.created_at || 0).getTime();
+      const bv =
+        sortKey === "priority"
+          ? b.priority ?? 0
+          : new Date(b.created_at || 0).getTime();
       return sortOrder === "asc" ? av - bv : bv - av;
-    })
+    });
     return list;
   }, [tasks, query, statusFilter, sortOrder, sortKey]);
 
@@ -133,7 +150,10 @@ export default function SearchPage(){
       </div>
 
       <div className="flex items-center gap-4">
-        <Select value={sortKey} onValueChange={(v) => setSortKey(v as "priority" | "created_at")}>
+        <Select
+          value={sortKey}
+          onValueChange={(v) => setSortKey(v as "priority" | "created_at")}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -142,13 +162,20 @@ export default function SearchPage(){
             <SelectItem value="created_at">Created</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as "asc" | "desc")}>
+        <Select
+          value={sortOrder}
+          onValueChange={(v) => setSortOrder(v as "asc" | "desc")}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Direction" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="asc"><ArrowDownAZIcon /> Asc</SelectItem>
-            <SelectItem value="desc"><ArrowUpAZIcon /> Desc</SelectItem>
+            <SelectItem value="asc">
+              <ArrowDownAZIcon /> Asc
+            </SelectItem>
+            <SelectItem value="desc">
+              <ArrowUpAZIcon /> Desc
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -176,9 +203,7 @@ export default function SearchPage(){
         opened={newOpen}
         heading={`Edit ${metadata.singular}`}
         close={() => setNewOpen(false)}
-        create={(newValues) =>
-          createMutation.mutateAsync(newValues)
-        }
+        create={(newValues) => createMutation.mutateAsync(newValues)}
         entityId={editTask?.id}
         service={service}
       />
@@ -190,9 +215,7 @@ export default function SearchPage(){
         update={(id, newValues) =>
           updateMutation.mutateAsync({ id, data: newValues })
         }
-        delete={() =>
-          deleteMutation.mutateAsync(editTask ? editTask.id : 0)
-        }
+        delete={() => deleteMutation.mutateAsync(editTask ? editTask.id : 0)}
         entityId={editTask?.id}
         service={service}
       />

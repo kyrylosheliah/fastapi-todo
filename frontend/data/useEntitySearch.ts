@@ -89,10 +89,11 @@ export function useEntitySearch({
     return nextSearch;
   }, [pagination, sorting, globalFilter, relationFilter]);
 
+  // commented out to fix
   // Sync search params to external state whenever they change
-  useEffect(() => {
-    searchParamsControl.set(searchParams);
-  }, [searchParams]);
+  // useEffect(() => {
+  //   searchParamsControl.set(searchParams);
+  // }, [searchParams]);
 
   const handlePaginationChange = useCallback(
     (updater: any) => {

@@ -1,11 +1,26 @@
-import { useMemo, useState, useEffect, Suspense } from "react";
-import { type FieldValues, type UseFormReturn, type Path, useWatch, get } from "react-hook-form";
+"use client";
+
+import { useMemo, useState, useEffect } from "react";
+import {
+  type FieldValues,
+  type UseFormReturn,
+  type Path,
+  useWatch,
+  get,
+} from "react-hook-form";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
 import { EntityTable } from "./EntityTable";
 import ButtonText from "../ButtonText";
 import ButtonIcon from "../ButtonIcon";
-import { CalendarIcon, CheckIcon, CircleOffIcon, EditIcon, PlusIcon, XIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CheckIcon,
+  CircleOffIcon,
+  EditIcon,
+  PlusIcon,
+  XIcon,
+} from "lucide-react";
 import { Checkbox } from "../Checkbox";
 import { Modal } from "../Modal";
 import { DatabaseType, fieldMetadataInitialValue } from "@/data/EntityMetadata";
@@ -14,7 +29,11 @@ import EntityService from "@/data/EntityService";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -24,12 +43,12 @@ export const EntityFormField = (params: {
   edit?: boolean;
   service: EntityService;
   form: UseFormReturn<FieldValues>;
-  fieldKey: (keyof FieldValues) & Path<FieldValues>;
+  fieldKey: keyof FieldValues & Path<FieldValues>;
   breakPopover?: boolean;
 }) => {
   const fieldValue = useWatch({
     control: params.form.control,
-    name: [params.fieldKey],
+    name: params.fieldKey,
   });
 
   const isDirty: boolean | undefined = useMemo(
@@ -42,14 +61,13 @@ export const EntityFormField = (params: {
   const errors = params.form.formState.errors;
 
   const fieldMetadata = params.service.metadata.fields[params.fieldKey];
-  if (params.fieldKey === undefined || fieldMetadata === undefined) {
-    return (<span>unspecified field metadata</span>);
-  }
 
   const keyOrConst =
     fieldMetadata.constant === true || fieldMetadata.type === "key";
 
-  return (
+  return params.fieldKey === undefined || fieldMetadata === undefined ? (
+    <span>unspecified field metadata</span>
+  ) : (
     <div>
       <div className="gap-2 flex flex-row items-center justify-between">
         <div className="gap-2 flex flex-row items-center">
@@ -75,7 +93,8 @@ export const EntityFormField = (params: {
             {fieldMetadata.nullable === true && fieldValue !== null && (
               <ButtonIcon
                 props={{
-                  onClick: () => params.form.setValue(params.fieldKey, null as any),
+                  onClick: () =>
+                    params.form.setValue(params.fieldKey, null as any),
                 }}
                 children={<XIcon size={16} />}
               />
@@ -105,11 +124,9 @@ export const EntityFormField = (params: {
       )}
     </div>
   );
-}
+};
 
-const EntityFieldIcon = (params: {
-  fieldType: DatabaseType
-}) => {
+const EntityFieldIcon = (params: { fieldType: DatabaseType }) => {
   let children: any;
   switch (params.fieldType) {
     case "key":
@@ -137,7 +154,7 @@ const EntityFieldIcon = (params: {
 };
 
 const EntityFieldControl = (params: {
-  fieldKey: (keyof FieldValues) & Path<FieldValues>;
+  fieldKey: keyof FieldValues & Path<FieldValues>;
   fieldValue: any;
   form: UseFormReturn<FieldValues>;
   service: EntityService;
@@ -148,10 +165,11 @@ const EntityFieldControl = (params: {
   });
 
   const fieldMetadata = params.service.metadata.fields[params.fieldKey];
-  
-  const initialValue = (params.form.formState.defaultValues !== undefined
-    && get(params.form.formState.defaultValues, params.fieldKey))
-      || fieldMetadataInitialValue(fieldMetadata);
+
+  const initialValue =
+    (params.form.formState.defaultValues !== undefined &&
+      get(params.form.formState.defaultValues, params.fieldKey)) ||
+    fieldMetadataInitialValue(fieldMetadata);
 
   const keyOrConst =
     fieldMetadata.constant === true || fieldMetadata.type === "key";
@@ -182,7 +200,7 @@ const EntityFieldControl = (params: {
 };
 
 const EntityFieldInput = (params: {
-  fieldKey: (keyof FieldValues) & Path<FieldValues>;
+  fieldKey: keyof FieldValues & Path<FieldValues>;
   fieldValue: any;
   form: UseFormReturn<FieldValues>;
   service: EntityService;
@@ -200,8 +218,8 @@ const EntityFieldInput = (params: {
         get(errors, params.fieldKey)
           ? "border-red-400"
           : isDirty
-            ? "border-yellow-600"
-            : ""
+          ? "border-yellow-600"
+          : ""
       ),
     [params.form.formState.errors, isDirty]
   );
@@ -245,9 +263,12 @@ const EntityFieldInput = (params: {
           <PopoverContent className="w-auto p-0">
             <Calendar
               mode="single"
-              selected={params.fieldValue && !isNaN(new Date(params.fieldValue).getTime())}
+              selected={
+                params.fieldValue &&
+                !isNaN(new Date(params.fieldValue).getTime())
+              }
               onSelect={(v: Date | undefined) =>
-                params.form.setValue(params.fieldKey, (v ? v.toISOString() : ""))
+                params.form.setValue(params.fieldKey, v ? v.toISOString() : "")
               }
             />
           </PopoverContent>
@@ -309,7 +330,7 @@ const EntityFieldInput = (params: {
 };
 
 const EntityFormFkInput = (params: {
-  fieldKey: (keyof FieldValues) & Path<FieldValues>;
+  fieldKey: keyof FieldValues & Path<FieldValues>;
   fieldValue: any;
   form: UseFormReturn<FieldValues>;
   service: EntityService;
@@ -318,9 +339,12 @@ const EntityFormFkInput = (params: {
 }) => {
   const fieldMetadata = params.service.metadata.fields[params.fieldKey];
   const singular = fieldMetadata.label;
-  const [searchParams, setSearchParams] =
-    useState<SearchParams>(getDefaultSearchParams());
-  const [pickerEntityId, setPickerEntityId] = useState<number | undefined>(params.fieldValue);
+  const [searchParams, setSearchParams] = useState<SearchParams>(
+    getDefaultSearchParams()
+  );
+  const [pickerEntityId, setPickerEntityId] = useState<number | undefined>(
+    params.fieldValue
+  );
   useEffect(() => {
     if (pickerEntityId === undefined) {
       params.form.setValue(params.fieldKey, params.initialValue);
@@ -338,14 +362,12 @@ const EntityFormFkInput = (params: {
         close={() => setEdit(false)}
         className="p-0"
       >
-        <Suspense fallback="Loading...">
-          <EntityTable
-            service={EntityServiceRegistry[fieldMetadata.apiPrefix!] as any}
-            searchParams={{ value: searchParams, set: setSearchParams }}
-            pickerState={[pickerEntityId, setPickerEntityId]}
-            className={params.commonClasses}
-          />
-        </Suspense>
+        <EntityTable
+          service={EntityServiceRegistry[fieldMetadata.apiPrefix!] as any}
+          searchParams={{ value: searchParams, set: setSearchParams }}
+          pickerState={[pickerEntityId, setPickerEntityId]}
+          className={params.commonClasses}
+        />
       </Modal>
       <div className="flex flex-row gap-2">
         <EntityFieldDisplay

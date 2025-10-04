@@ -1,6 +1,6 @@
-import { useRouter } from "next/router";
+"use client";
+
 import type { FieldValues, Path } from "react-hook-form";
-// import { EntityForm } from "./EntityForm";
 import { CalendarIcon, CircleOffIcon, SquareArrowUpRightIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import ButtonIcon from "../ButtonIcon";
@@ -9,6 +9,9 @@ import EntityService from "@/data/EntityService";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { BadgeIcon } from "@/components/BadgeIcon";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
+import Link from "next/link";
+import { EntityForm } from "@/components/data/EntityForm";
+import { useMemo } from "react";
 
 export const EntityFieldDisplay = (params: {
   fieldKey: (keyof FieldValues) & Path<FieldValues>;
@@ -67,7 +70,12 @@ const EntityFkField = (params: {
   fieldMetadata: EntityFieldMetadata;
   breakPopover?: boolean;
 }) => {
-  const router = useRouter();
+
+  const fkService = EntityServiceRegistry[params.fieldMetadata.apiPrefix!];
+  const fkMetadata = fkService.metadata;
+  const { data, isPending } = fkService.useGet(params.fkId);
+  const dataMemo = useMemo(() => data, [data]);
+
   if (params.fkId === 0) {
     return (
       <Badge
@@ -77,37 +85,35 @@ const EntityFkField = (params: {
       />
     );
   }
-  const fkService = EntityServiceRegistry[params.fieldMetadata.apiPrefix!];
-  const fkMetadata = fkService.metadata;
-  const { data, isPending } = fkService.useGet(params.fkId);
-  const loadingElement = <div>...</div>;
-  return isPending || data === undefined ? (
-    loadingElement
-  ) : params.breakPopover ? (
-    fkMetadata.peekComponent(data as any)
-  ) : (
+
+  if (isPending || data === undefined) {
+    return <div>Loading ...</div>;
+  }
+
+  if (params.breakPopover) {
+    return fkMetadata.peekComponent(data as any);
+  }
+
+  return (
     <HoverCard>
       <HoverCardTrigger>
         {fkMetadata.peekComponent(data as any)}
       </HoverCardTrigger>
       <HoverCardContent className="p-0 w-full inline-block border rounded-md shadow-md flex flex-row items-start">
         <div className="py-4 pl-4">
-          {JSON.stringify(data)}
-          {/* <EntityForm
+          <EntityForm
             edit={false}
-            entity={data as any}
+            entity={dataMemo as FieldValues}
             onSubmit={() => {}}
             service={fkService as any}
             breakPopover
-          /> */}
+          />
         </div>
-        <ButtonIcon
-          children={<SquareArrowUpRightIcon size={16} />}
-          props={{
-            onClick: () =>
-              router.push(`${fkMetadata.indexPagePrefix}/${params.fkId}`),
-          }}
-        />
+        <Link href={`${fkMetadata.indexPagePrefix}/${params.fkId}`}>
+          <ButtonIcon>
+            <SquareArrowUpRightIcon size={16} />
+          </ButtonIcon>
+        </Link>
       </HoverCardContent>
     </HoverCard>
   );

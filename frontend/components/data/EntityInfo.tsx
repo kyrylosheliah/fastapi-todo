@@ -1,7 +1,9 @@
-import { Fragment, useState } from "react";
+"use client";
+
+import { useMemo, useState } from "react";
 import { EntityForm } from "./EntityForm";
 import { EntityTable } from "./EntityTable";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import ButtonText from "../ButtonText";
 import { EntityServiceRegistry } from "@/data/EntityServiceRegistry";
 import EntityService from "@/data/EntityService";
@@ -13,32 +15,34 @@ const RelatedTable = (params: {
     apiPrefix: "/task" | "/status" | "/category";
     fkField: string;
   };
-  entityId: string;
-  service: EntityService;
+  entityId: string | number;
 }) => {
+  const service = EntityServiceRegistry[params.relation.apiPrefix];
+
   const [searchParams, setSearchParams] = useState<SearchParams>(
     getDefaultSearchParams()
   );
+
   return (
-    <Fragment key={`relation_${params.relation.apiPrefix}`}>
+    <>
       <h2 className="mb-4 text-xl fw-600">{params.relation.label}</h2>
       <EntityTable
         traverse
         key={`relation_${params.relation.label}`}
         searchParams={{ value: searchParams, set: setSearchParams }}
-        service={params.service}
+        service={service}
         relationFilter={{
           key: params.relation.fkField,
           value: params.entityId,
         }}
         edit
       />
-    </Fragment>
+    </>
   );
 };
 
 export const EntityInfo = (params: {
-  entityId: string;
+  entityId: string | number;
   service: EntityService;
 }) => {
   const router = useRouter();
@@ -130,7 +134,6 @@ export const EntityInfo = (params: {
               key={"relation__" + r.apiPrefix}
               entityId={params.entityId}
               relation={r}
-              service={EntityServiceRegistry[r.apiPrefix] as any}
             />
           ))
         ) : (

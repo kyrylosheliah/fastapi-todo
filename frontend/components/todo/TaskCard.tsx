@@ -1,3 +1,5 @@
+"use client";
+
 import ButtonIcon from "@/components/ButtonIcon";
 import { EntityFieldDisplay } from "@/components/data/EntityFieldDisplay";
 import { Badge } from "@/components/ui/badge";

@@ -93,7 +93,7 @@ export default class EntityService {
 
   useGet(entityId: string | number) {
     return useQuery({
-      queryKey: [this.metadata.apiPrefix, "get", entityId],
+      queryKey: [this.metadata.apiPrefix, "get", entityId.toString()],
       queryFn: () => this.get(entityId),
       enabled: !!entityId,
     });
@@ -131,13 +131,13 @@ export default class EntityService {
     return useMutation({
       mutationFn: (params: { id: string | number; data: FieldValues }) =>
         this.update(params.id, params.data),
-      onSuccess: async (_, variables) => {
+      onSuccess: async (_, info) => {
         await Promise.all([
           queryClient.invalidateQueries({
             queryKey: [this.metadata.apiPrefix, "search"],
           }),
           queryClient.invalidateQueries({
-            queryKey: [this.metadata.apiPrefix, "get", variables],
+            queryKey: [this.metadata.apiPrefix, "get", info.id.toString()],
           }),
           queryClient.invalidateQueries({
             queryKey: [this.metadata.apiPrefix, "get", "all"],
@@ -155,13 +155,13 @@ export default class EntityService {
     const queryClient = useQueryClient();
     return useMutation({
       mutationFn: (id: string | number) => this.delete(id),
-      onSuccess: async (_, variables) => {
+      onSuccess: async (_, id) => {
         await Promise.all([
           queryClient.invalidateQueries({
             queryKey: [this.metadata.apiPrefix, "search"],
           }),
           queryClient.invalidateQueries({
-            queryKey: [this.metadata.apiPrefix, "get", variables],
+            queryKey: [this.metadata.apiPrefix, "get", id.toString()],
           }),
           queryClient.invalidateQueries({
             queryKey: [this.metadata.apiPrefix, "get", "all"],

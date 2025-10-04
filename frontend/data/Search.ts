@@ -1,12 +1,11 @@
 import { z } from "zod";
 import { getZodDefaults } from "../utils/getZodDefaults";
-import type { Entity } from "./Entity";
 import { FieldValues } from "react-hook-form";
 
 export const SearchDTO = z.object({
-  pageNo: z.number().min(1).default(1),
-  pageSize: z.number().min(1).max(20).default(10),
-  ascending: z.boolean().default(true),
+  pageNo: z.coerce.number().min(1).default(1),
+  pageSize: z.coerce.number().min(1).max(20).default(10),
+  ascending: z.coerce.boolean().default(true),
   orderByColumn: z.string().default("id"),
   criteria: z.record(z.string(), z.any()).default({}),
   globalFilter: z.string().default(""),

@@ -1,11 +1,14 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
 import { FieldErrors, FieldValues, useForm } from "react-hook-form";
 import { EntityFormField } from "./EntityFormField";
 import EntityService from "@/data/EntityService";
 import { Button } from "@/components/ui/button";
 import ButtonIcon from "@/components/ButtonIcon";
 import { Trash2Icon } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import z from "zod";
 
 export const EntityForm = (params: {
   edit?: boolean;
@@ -17,10 +20,12 @@ export const EntityForm = (params: {
 }) => {
   const metadata = params.service.metadata;
 
-  const defaultFormFields = params.service.getFormFields(params.entity);
+  const defaultFormFields = useMemo(() => {
+    return params.service.getFormFields(params.entity);
+  }, [params.service, params.entity]);
 
   const form = useForm<FieldValues>({
-    resolver: zodResolver(metadata.formSchema as any), // TODO: typescript
+    resolver: zodResolver(metadata.formSchema as z.ZodType<FieldValues, FieldValues>),
     defaultValues: defaultFormFields,
   });
 
@@ -28,56 +33,57 @@ export const EntityForm = (params: {
     if (params.entity) {
       form.reset(defaultFormFields);
     }
-  }, [params.entity, form, defaultFormFields]);
+  }, [params.entity, defaultFormFields]);
 
   const RootTag = params.edit ? "form" : "div";
 
   const onSubmit = params.edit
     ? form.handleSubmit(
         (newFields: FieldValues) => params.onSubmit(newFields),
-        (m: FieldErrors<FieldValues>) => alert(`Invalid form ${JSON.stringify(m)}`)
+        (m: FieldErrors<FieldValues>) =>
+          alert(`Invalid form ${JSON.stringify(m)}`)
       )
     : undefined;
 
   return (
-    <RootTag
-      onSubmit={onSubmit}
-      className="flex flex-col gap-3 text-align-start"
-    >
-      {Object.keys(defaultFormFields).map((key: string) => (
-        <EntityFormField
-          edit={params.edit}
-          key={`entity_form_field_${key}`}
-          form={form}
-          fieldKey={key as any}
-          service={params.service}
-          breakPopover={params.breakPopover}
-        />
-      ))}
-      {params.edit && (
-        <div className="flex flex-row justify-between items-center">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => form.reset()}
-            className="self-end"
-          >
-            Reset
-          </Button>
-          {params.delete && (
-            <ButtonIcon
-              type="danger"
-              children={<Trash2Icon size={16} />}
-              props={{
-                onClick: params.delete,
-              }}
-            />
-          )}
-          <Button type="button" onClick={onSubmit} className="self-end">
-            Apply
-          </Button>
-        </div>
-      )}
-    </RootTag>
+      <RootTag
+        onSubmit={onSubmit}
+        className="flex flex-col gap-3 text-align-start"
+      >
+        {Object.keys(defaultFormFields).map((key: string) => (
+          <EntityFormField
+            edit={params.edit}
+            key={`entity_form_field_${key}`}
+            form={form}
+            fieldKey={key as any}
+            service={params.service}
+            breakPopover={params.breakPopover}
+          />
+        ))}
+        {params.edit && (
+          <div className="flex flex-row justify-between items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => form.reset()}
+              className="self-end"
+            >
+              Reset
+            </Button>
+            {params.delete && (
+              <ButtonIcon
+                type="danger"
+                children={<Trash2Icon size={16} />}
+                props={{
+                  onClick: params.delete,
+                }}
+              />
+            )}
+            <Button type="button" onClick={onSubmit} className="self-end">
+              Apply
+            </Button>
+          </div>
+        )}
+      </RootTag>
   );
 };

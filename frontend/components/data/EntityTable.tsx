@@ -1,11 +1,29 @@
+"use client";
+
 import { useEffect, useState, type JSX } from "react";
-import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type RowSelectionState } from "@tanstack/react-table";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  type ColumnDef,
+  type RowSelectionState,
+} from "@tanstack/react-table";
 import { cx } from "../../utils/cx";
 import { EntityFieldDisplay } from "./EntityFieldDisplay";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/Checkbox";
 import ButtonIcon from "@/components/ButtonIcon";
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, PlusIcon, SquareArrowUpRightIcon, SquarePenIcon, Trash2Icon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  PlusIcon,
+  SearchIcon,
+  SquareArrowUpRightIcon,
+  SquarePenIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { SearchParams } from "@/data/Search";
 import EntityService from "@/data/EntityService";
 import { Input } from "@/components/ui/input";
@@ -16,7 +34,7 @@ import { FieldValues } from "react-hook-form";
 export function EntityTable(params: {
   pickerState?: [
     number | undefined,
-    React.Dispatch<React.SetStateAction<number | undefined>>,
+    React.Dispatch<React.SetStateAction<number | undefined>>
   ];
   relationFilter?: { key: string; value: any };
   service: EntityService;
@@ -59,7 +77,9 @@ export function EntityTable(params: {
   );
 
   const internalSelectedRowIdState = useState<number | undefined>();
-  const [selectedRowId, setSelectedRowId] = params.pickerState ? params.pickerState : internalSelectedRowIdState;
+  const [selectedRowId, setSelectedRowId] = params.pickerState
+    ? params.pickerState
+    : internalSelectedRowIdState;
 
   useEffect(() => {
     const selectedRows = entities.filter((row) => rowSelection[row.id]);
@@ -77,15 +97,17 @@ export function EntityTable(params: {
       header: ({ table }) => {
         const allSelected = table.getIsAllRowsSelected();
         const someSelected = table.getIsSomeRowsSelected() || allSelected;
-        return (<Checkbox
-          attributes={{
-            disabled: !someSelected,
-            checked: allSelected,
-            onChange: () => {},
-            onClick: () => table.resetRowSelection(),
-          }}
-          indeterminate={someSelected}
-        />);
+        return (
+          <Checkbox
+            attributes={{
+              disabled: !someSelected,
+              checked: allSelected,
+              onChange: () => {},
+              onClick: () => table.resetRowSelection(),
+            }}
+            indeterminate={someSelected}
+          />
+        );
       },
       cell: ({ row }) => (
         <Checkbox
@@ -121,7 +143,8 @@ export function EntityTable(params: {
       cell: ({ row }) => (
         <ButtonIcon
           props={{
-            onClick: () => router.push(`${metadata.indexPagePrefix}/${row.original.id}`),
+            onClick: () =>
+              router.push(`${metadata.indexPagePrefix}/${row.original.id}`),
           }}
         >
           <SquareArrowUpRightIcon size={32} />
@@ -170,9 +193,9 @@ export function EntityTable(params: {
       )}
     >
       <div className="w-full h-8 gap-2 flex flex-row justify-between items-center">
-        {/* <ButtonIcon className="w-8 h-8" props={{ disabled: true }}>
+        <ButtonIcon className="w-8 h-8" props={{ disabled: true }}>
           <SearchIcon />
-        </ButtonIcon> */}
+        </ButtonIcon>
         <Input
           type="text"
           placeholder="Search..."
@@ -275,7 +298,9 @@ export function EntityTable(params: {
                 <tr
                   key={row.id}
                   className={
-                    row.getIsSelected() ? "bg-blue-100 dark:bg-gray-700" : "hover:bg-gray-200 dark:hover:bg-gray-800"
+                    row.getIsSelected()
+                      ? "bg-blue-100 dark:bg-gray-700"
+                      : "hover:bg-gray-200 dark:hover:bg-gray-800"
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -305,7 +330,10 @@ export function EntityTable(params: {
           <ChevronLeftIcon />
         </ButtonIcon>
         <span>
-          {`Page ${table.getPageCount() && `${pagination.pageIndex + 1} of ${table.getPageCount()}`} `}
+          {`Page ${
+            table.getPageCount() &&
+            `${pagination.pageIndex + 1} of ${table.getPageCount()}`
+          } `}
         </span>
         <ButtonIcon
           props={{

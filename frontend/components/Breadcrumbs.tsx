@@ -1,12 +1,13 @@
+"use client";
+
 import { Fragment } from "react";
-import { useRouter } from "next/router";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { usePathname } from "next/navigation";
 
 export function Breadcrumbs() {
-  const router = useRouter();
+  const pathname = usePathname();
 
   const generateBreadcrumbs = () => {
-    const pathname = router.pathname;
     const segments = pathname.split("/").filter(Boolean);
 
     const breadcrumbs = [{ label: "Home", path: "/", isLast: false }];

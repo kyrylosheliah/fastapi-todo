@@ -82,8 +82,13 @@ export default function TaskSearch() {
     setTasks((tasksQuery || []) as ITask[]);
   }, [tasksQuery, isTasksQueryPending]);
 
+  const [listVersion, setListVersion] = useState<number>(0);
+
+  const isDone = (t: ITask) => t.status_id === doneId && doneId !== undefined;
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+
     let list = tasks.filter(
       (t) =>
         (!statusFilter || t.status_id === statusFilter) &&
@@ -91,26 +96,28 @@ export default function TaskSearch() {
           t.title.toLowerCase().includes(q) ||
           (t.description || "").toLowerCase().includes(q))
     );
-    list = list.sort((a, b) => {
-      const av =
-        sortKey === "priority"
-          ? a.priority ?? 0
-          : new Date(a.created_at || 0).getTime();
-      const bv =
-        sortKey === "priority"
-          ? b.priority ?? 0
-          : new Date(b.created_at || 0).getTime();
-      return sortOrder === "asc" ? av - bv : bv - av;
-    });
-    return list;
-  }, [tasks, query, statusFilter, sortOrder, sortKey]);
+
+    const done = list.filter(isDone);
+    const notDone = list.filter((t) => !isDone(t));
+
+    const sortByPriority = (a: ITask, b: ITask) => {
+      const aPriority = a.priority ?? 0;
+      const bPriority = b.priority ?? 0;
+
+      return sortOrder === "asc" ? aPriority - bPriority : bPriority - aPriority;
+    };
+
+    notDone.sort(sortByPriority);
+    done.sort(sortByPriority);
+
+    return [...notDone, ...done];
+  }, [listVersion, tasks, query, statusFilter, sortOrder]);
 
   async function toggleCompletion(task: ITask) {
     if (!binaryStatusesPresent) return;
     task.status_id = task.status_id === doneId! ? inProgressId! : doneId!;
     await silentUpdateMutation.mutateAsync({ id: task.id, data: task });
-    // trigger filtering
-    setSortOrder(sortOrder);
+    setListVersion(listVersion + 1);
   }
 
   return (

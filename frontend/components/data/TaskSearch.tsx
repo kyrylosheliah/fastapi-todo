@@ -89,7 +89,7 @@ export default function TaskSearch() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    let list = tasks.filter(
+    const list = tasks.filter(
       (t) =>
         (!statusFilter || t.status_id === statusFilter) &&
         (!q ||
